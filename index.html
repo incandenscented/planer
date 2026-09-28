@@ -7,18 +7,39 @@
 </head>
 <body>
     <h1>Планировщик квартиры</h1>
-    <p>Перетаскивайте мебель мышкой внутри комнаты</p>
+    <p>Задайте размеры, расставьте мебель и поворачивайте её кнопкой ↻</p>
 
     <div class="app">
         <div class="toolbox">
-            <h3>Мебель</h3>
+
+            <h3>📐 Комната</h3>
+            <label>Ширина (м): <input id="room-w" type="number" value="5" min="2" max="8" step="0.5"></label>
+            <label>Длина (м):  <input id="room-h" type="number" value="4" min="2" max="8" step="0.5"></label>
+            <button id="apply-room" class="apply-btn">Применить</button>
+
+            <hr>
+
+            <h3>🛋 Готовая мебель</h3>
             <button class="tool-btn" data-type="sofa">🛋 Диван (2×1 м)</button>
             <button class="tool-btn" data-type="table">🪑 Стол (1×1 м)</button>
             <button class="tool-btn" data-type="wardrobe">🚪 Шкаф (1×0.5 м)</button>
             <button class="tool-btn" data-type="bed">🛏 Кровать (2×1.5 м)</button>
+
             <hr>
-            <button id="clear-btn">🗑 Очистить</button>
+
+            <h3>➕ Своя мебель</h3>
+            <input id="f-name" type="text" placeholder="Название (напр. Комод)" maxlength="12">
+            <label>Ширина (м): <input id="f-w" type="number" value="1" min="0.5" max="5" step="0.5"></label>
+            <label>Глубина (м): <input id="f-h" type="number" value="1" min="0.5" max="5" step="0.5"></label>
+            <button id="add-custom" class="apply-btn">Добавить</button>
+
+            <hr>
+
+            <p class="hint">💡 Нажмите ↻ на предмете, чтобы повернуть его на 90°</p>
+
+            <button id="clear-btn">🗑 Очистить всё</button>
         </div>
+
         <div class="room-wrapper">
             <div id="room" class="room"></div>
         </div>
