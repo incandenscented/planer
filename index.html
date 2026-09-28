@@ -1,0 +1,78 @@
+if (newX < 0) newX = 0;
+        if (newY < 0) newY = 0;
+        if (newX + dragging.w > ROOM_WIDTH) newX = ROOM_WIDTH - dragging.w;
+        if (newY + dragging.h > ROOM_HEIGHT) newY = ROOM_HEIGHT - dragging.h;
+
+        dragging.x = newX;
+        dragging.y = newY;
+
+        render();
+        canvas.style.cursor = 'grabbing';
+    } else {
+        const item = findItem(pos.x, pos.y);
+        canvas.style.cursor = item ? 'grab' : 'default';
+    }
+});
+
+// Слушаем mouseup на всём окне — если увезли мышь за холст, тоже сработает
+window.addEventListener('mouseup', function() {
+    if (dragging) {
+        dragging = null;
+        render();
+        canvas.style.cursor = 'default';
+    }
+});
+
+document.querySelectorAll('.tool-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        const type = btn.dataset.type;
+        const t = LIB[type];
+        if (!t) return;
+        furnitureItems.push({
+            name: t.name
+,
+            w: t.w,
+            h: t.h,
+            color: t.color,
+            x: 1,
+            y: 1
+        });
+        render();
+    });
+});
+
+document.getElementById('clear-btn').addEventListener('click', function() {
+    furnitureItems = [];
+    dragging = null;
+    render();
+});
+
+render();<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+    <title>Планировщик квартиры</title>
+</head>
+<body>
+    <h1>Планировщик квартиры</h1>
+    <p>Перетаскивайте мебель мышкой внутри комнаты</p>
+
+    <div class="app">
+        <div class="toolbox">
+            <h3>Мебель</h3>
+            <button class="tool-btn" data-type="sofa">🛋 Диван (2×1 м)</button>
+            <button class="tool-btn" data-type="table">🪑 Стол (1×1 м)</button>
+            <button class="tool-btn" data-type="wardrobe">🚪 Шкаф (1×0.5 м)</button>
+            <button class="tool-btn" data-type="bed">🛏 Кровать (2×1.5 м)</button>
+            <hr>
+            <button id="clear-btn">🗑 Очистить</button>
+        </div>
+        <div class="room-wrapper">
+            <div id="room" class="room"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
