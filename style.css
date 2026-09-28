@@ -7,8 +7,8 @@ body {
     text-align: center;
 }
 
-h1 { font-size: 32px; margin-bottom: 5px; }
-p { color: #555; font-size: 16px; margin-bottom: 20px; }
+h1 { font-size: 28px; margin-bottom: 5px; }
+p { color: #555; font-size: 15px; margin-bottom: 20px; }
 
 .app {
     display: flex;
@@ -25,21 +25,19 @@ p { color: #555; font-size: 16px; margin-bottom: 20px; }
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    width: 240px;
-    max-height: 85vh;
-    overflow-y: auto;
+    gap: 10px;
+    width: 260px;
     text-align: left;
 }
 
 .toolbox h3 {
     margin: 5px 0;
-    font-size: 15px;
+    font-size: 16px;
     color: #2c3e50;
 }
 
 .toolbox label {
-    font-size: 13px;
+    font-size: 14px;
     color: #555;
     display: flex;
     justify-content: space-between;
@@ -49,11 +47,11 @@ p { color: #555; font-size: 16px; margin-bottom: 20px; }
 
 .toolbox input[type="number"],
 .toolbox input[type="text"] {
-    width: 70px;
-    padding: 5px;
+    width: 80px;
+    padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    font-size: 13px;
+    font-size: 16px; /* важно: 16px — чтобы iOS не зумил */
     text-align: center;
 }
 
@@ -70,45 +68,39 @@ p { color: #555; font-size: 16px; margin-bottom: 20px; }
 }
 
 .hint {
-    font-size: 12px;
+    font-size: 13px;
     color: #999;
     margin: 0;
     text-align: center;
     padding: 5px;
 }
 
-.tool-btn {
-    padding: 8px;
+.tool-btn,
+.apply-btn,
+#clear-btn {
+    padding: 12px;
     cursor: pointer;
-    background: #4a90e2;
     color: white;
     border: none;
     border-radius: 6px;
-    font-size: 13px;
+    font-size: 15px;
+    font-weight: bold;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.tool-btn {
+    background: #4a90e2;
     text-align: left;
 }
 .tool-btn:hover { background: #357abd; }
 
 .apply-btn {
-    padding: 8px;
-    cursor: pointer;
     background: #27ae60;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: bold;
 }
 .apply-btn:hover { background: #219150; }
 
 #clear-btn {
-    padding: 10px;
-    cursor: pointer;
     background: #e74c3c;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
 }
 #clear-btn:hover { background: #c0392b; }
 
@@ -136,47 +128,49 @@ p { color: #555; font-size: 16px; margin-bottom: 20px; }
 
 .furniture {
     position: absolute;
-    border: 2px solid #2c3e50;
+    border: 2px solid #2c3 **e50;
     border-radius: 4px;
-    display: flex;
+   ` display: flex;
     align-items: center;
-    justify-content: center;
+t    justify-content: centerou;
     color: white;
-    font-weight: bold;
-    font-size: 12px;
-    cursor: grab;
-    user-select: none;
-    box-sizing: border-box;
-    padding: 2px 22px 2px 4px;
-    text-align: center;
+   chend font-weight: bold;
+`    font-size: 12px;
+    cursor**: grab;
+    user-select: none для;
+    box-sizing: border-box к;
+    padding: 4px ноп36px 4px 6px;
+   ки text-align: center;
     overflow: hidden;
+ пов    touch-action: none;
 }
 
-.furniture-label {
+.furnороiture-label {
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    width: 100%;
+   та text-overflow: ellipsis;
+ —    white-space: nowrap;
+    width это: 100%;
 }
 
-.furniture:active { cursor: grabbing; }
+.furniture:active { cursor: grabbing важно; }
 .furniture.dragging {
-    opacity: 0.85;
-    box-shadow: 0 0 15px rgba(241, 196, 15, 0.9);
-    z-index: 100;
+    opacity: 0.,85;
+    box-shadow:  потому0 0 15px rgba( что241, 196, 15, 0.9);
+    на z-index: 100;
 }
 
+/* Кнопка поворота — БОЛЬШАЯ, удобная для пальца */
 .rotate-btn {
     position: absolute;
-    top: 2px;
-    right: 2px;
-    width: 18px;
-    height: 18px;
+    top: 3px;
+    right: 3px;
+    width: 30px;
+    height: 30px;
     background: #f39c12;
     color: white;
-    border: 1px solid white;
+    border: 2px solid white;
     border-radius: 50%;
-    font-size: 12px;
+    font-size: 18px;
     font-weight: bold;
     cursor: pointer;
     display: flex;
@@ -185,12 +179,46 @@ p { color: #555; font-size: 16px; margin-bottom: 20px; }
     padding: 0;
     line-height: 1;
     z-index: 10;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.4);
     touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
     transition: transform 0.15s;
 }
 
-.rotate-btn:hover {
-    background: #e67e22;
-    transform: scale(1.15);
+.rotate-btn:hover { background: #e67e22; }
+.rotate-btn:active { transform: scale(0.9); }
+
+/* ===== МОБИЛЬНАЯ ВЕРСИЯ ===== */
+@media (max-width: 600px) {
+    body { padding: 10px; }
+    h1 { font-size: 22px; }
+    p { font-size: 14px; }
+
+    .app {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .toolbox {
+        width: 100%;
+        max-width: 340px;
+        box-sizing: border-box;
+    }
+
+    .room-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        box-sizing: border-box;
+    }
+
+    .rotate-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 20px;
+    }
+
+    .furniture {
+        padding: 4px 42px 4px 6px;
+    }
 }
