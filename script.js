@@ -24,8 +24,6 @@ document.querySelectorAll('.tool-btn').forEach(btn => {
         el.style.width  = (t.w * SCALE) + 'px';
         el.style.height = (t.h * SCALE) + 'px';
         el.style.background = t.color;
-
-        // Ставим в левый верхний угол комнаты
         el.style.left = '0px';
         el.style.top
   = '0px';
@@ -35,56 +33,68 @@ document.querySelectorAll('.tool-btn').forEach(btn => {
     });
 });
 
-// Перетаскивание вручную (через mousedown/mousemove/mouseup)
+// Перетаскивание — работает и мышкой, и пальцем
 function makeDraggable(el, wMeters, hMeters) {
     let startX = 0, startY = 0;
     let startLeft = 0, startTop = 0;
 
-    el.addEventListener('mousedown', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
+    function getPos(e) {
+        if (e.touches && e.touches.length > 0) {
+            return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        }
+        return { x: e.clientX, y: e.clientY };
+    }
 
-        startX = e.clientX;
-        startY = e.clientY;
+    function onStart(e) {
+        e.preventDefault();
+        const pos = getPos(e);
+        startX = pos.x;
+        startY = pos.y;
         startLeft = el.offsetLeft;
         startTop = el.offsetTop;
-
         el.classList.add('dragging');
 
-        function onMove(ev) {
-            const dx = ev.clientX - startX;
-            const dy = ev.clientY - startY;
-
-            let newLeft = startLeft + dx;
-            let newTop  = startTop + dy;
-
-            // Привязка к сетке 0.5 м = 50 пикселей
-            newLeft = Math.round(newLeft / 50) * 50;
-            newTop  = Math.round(newTop / 50) * 50;
-
-            // Границы комнаты
-            const maxLeft = room.clientWidth - wMeters * SCALE;
-            const maxTop  = room.clientHeight - hMeters * SCALE;
-
-            if (newLeft < 0) newLeft = 0;
-            if (newTop < 0) newTop = 0;
-            if (newLeft > maxLeft) newLeft = maxLeft;
-            if (newTop > maxTop) newTop = maxTop;
-
-            el.style.left = newLeft + 'px';
-            el.style.top
-  = newTop + 'px';
-        }
-
-        function onUp() {
-            el.classList.remove('dragging');
-            document.removeEventListener('mousemove', onMove);
-            document.removeEventListener('mouseup', onUp);
-        }
-
         document.addEventListener('mousemove', onMove);
-        document.addEventListener('mouseup', onUp);
-    });
+        document.addEventListener('mouseup', onEnd);
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('touchend', onEnd);
+    }
+
+    function onMove(e) {
+        e.preventDefault();
+        const pos = getPos(e);
+        const dx = pos.x - startX;
+        const dy = pos.y - startY;
+
+        let newLeft = startLeft + dx;
+        let newTop  = startTop + dy;
+
+        newLeft = Math.round(newLeft / 50) * 50;
+        newTop  = Math.round(newTop / 50) * 50;
+
+        const maxLeft = room.clientWidth - wMeters * SCALE;
+        const maxTop  = room.clientHeight - hMeters * SCALE;
+
+        if (newLeft < 0) newLeft = 0;
+        if (newTop < 0) newTop = 0;
+        if (newLeft > maxLeft) newLeft = maxLeft;
+        if (newTop > maxTop) newTop = maxTop;
+
+        el.style.left = newLeft + 'px';
+        el.style.top
+  = newTop + 'px';
+    }
+
+    function onEnd() {
+        el.classList.remove('dragging');
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onEnd);
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', onEnd);
+    }
+
+    el.addEventListener('mousedown', onStart);
+    el.addEventListener('touchstart', onStart, { passive: false });
 }
 
 // Очистка
