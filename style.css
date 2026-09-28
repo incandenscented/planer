@@ -51,7 +51,7 @@ p { color: #555; font-size: 15px; margin-bottom: 20px; }
     padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    font-size: 16px; /* важно: 16px — чтобы iOS не зумил */
+    font-size: 16px;
     text-align: center;
 }
 
@@ -85,23 +85,17 @@ p { color: #555; font-size: 15px; margin-bottom: 20px; }
     border-radius: 6px;
     font-size: 15px;
     font-weight: bold;
+    touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
 }
 
-.tool-btn {
-    background: #4a90e2;
-    text-align: left;
-}
+.tool-btn { background: #4a90e2; text-align: left; }
 .tool-btn:hover { background: #357abd; }
 
-.apply-btn {
-    background: #27ae60;
-}
+.apply-btn { background: #27ae60; }
 .apply-btn:hover { background: #219150; }
 
-#clear-btn {
-    background: #e74c3c;
-}
+#clear-btn { background: #e74c3c; }
 #clear-btn:hover { background: #c0392b; }
 
 .room-wrapper {
@@ -128,38 +122,37 @@ p { color: #555; font-size: 15px; margin-bottom: 20px; }
 
 .furniture {
     position: absolute;
-    border: 2px solid #2c3 **e50;
+    border: 2px solid #2c3e50;
     border-radius: 4px;
-   ` display: flex;
+    display: flex;
     align-items: center;
-t    justify-content: centerou;
+    justify-content: center;
     color: white;
-   chend font-weight: bold;
-`    font-size: 12px;
-    cursor**: grab;
-    user-select: none для;
-    box-sizing: border-box к;
-    padding: 4px ноп36px 4px 6px;
-   ки text-align: center;
+    font-weight: bold;
+    font-size: 12px;
+    cursor: grab;
+    user-select: none;
+    box-sizing: border-box;
+    padding: 4px 36px 4px 6px;
+    text-align: center;
     overflow: hidden;
- пов    touch-action: none;
 }
 
-.furnороiture-label {
+.furniture-label {
     overflow: hidden;
-   та text-overflow: ellipsis;
- —    white-space: nowrap;
-    width это: 100%;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
 }
 
-.furniture:active { cursor: grabbing важно; }
+.furniture:active { cursor: grabbing; }
 .furniture.dragging {
-    opacity: 0.,85;
-    box-shadow:  потому0 0 15px rgba( что241, 196, 15, 0.9);
-    на z-index: 100;
+    opacity: 0.85;
+    box-shadow: 0 0 15px rgba(241, 196, 15, 0.9);
+    z-index: 100;
 }
 
-/* Кнопка поворота — БОЛЬШАЯ, удобная для пальца */
+/* БОЛЬШАЯ кнопка поворота */
 .rotate-btn {
     position: absolute;
     top: 3px;
@@ -182,13 +175,11 @@ t    justify-content: centerou;
     box-shadow: 0 1px 4px rgba(0,0,0,0.4);
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
-    transition: transform 0.15s;
 }
 
 .rotate-btn:hover { background: #e67e22; }
-.rotate-btn:active { transform: scale(0.9); }
 
-/* ===== МОБИЛЬНАЯ ВЕРСИЯ ===== */
+/* Мобильная версия */
 @media (max-width: 600px) {
     body { padding: 10px; }
     h1 { font-size: 22px; }
@@ -210,15 +201,13 @@ t    justify-content: centerou;
         width: 100%;
         overflow-x: auto;
         box-sizing: border-box;
-    }
-
-    .rotate-btn {
-        width: 36px;
-        height: 36px;
+    }.rotate-btn {
+        width: 38px;
+        height: 38px;
         font-size: 20px;
     }
 
     .furniture {
-        padding: 4px 42px 4px 6px;
+        padding: 4px 46px 4px 6px;
     }
 }
