@@ -22,8 +22,6 @@ function updateRoomSize() {
 }
 
 // === ИЗМЕНЕНИЕ РАЗМЕРА КОМНАТЫ ===
-const applyBtn = document.getElementById('apply-room');
-
 function applyRoomSize() {
     let w = parseFloat(document.getElementById('room-w').value);
     let h = parseFloat(document.getElementById('room-h').value);
@@ -42,13 +40,7 @@ function applyRoomSize() {
     room.querySelectorAll('.furniture').forEach(clampItem);
     saveState();
 }
-
-// Слушаем и клик, и тач
-applyBtn.addEventListener('click', applyRoomSize);
-applyBtn.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    applyRoomSize();
-});
+document.getElementById('apply-room').addEventListener('click', applyRoomSize);
 
 function clampItem(el) {
     const w = parseFloat(el.dataset.w);
@@ -77,6 +69,66 @@ function clampItem(el) {
   = top + 'px';
 }
 
+// === ПРОВЕРКА: ВЛЕЗАЕТ ЛИ МЕБЕЛЬ В КОМНАТУ ===
+function checkFits(name, w, h) {
+    if (w > roomW && h > roomH) {
+        alert('«' + name + '» ' + w + '×' + h + ' м не влезает в комнату ' +
+              roomW + '×' + roomH + ' м.\n\nУменьшите размер мебели или увеличьте комнату.');
+        return false;
+    }
+    if (w > roomW && h > roomW) {
+        alert('«' + name + '» шириной ' + w + ' м не влезает в комнату шириной ' + roomW + ' м.\n\n' +
+              'Попробуйте повернуть предмет кнопкой ↻ или уменьшить размер.');
+        return false;
+    }
+    if (w > roomW && h > roomH) {
+        alert('«' + name + '» не влезает в комнату.');
+        return false;
+    }
+    // Общий случай — мебель не влезает ни в одном положении
+    if (w > roomW && h > roomH) {
+        alert('«' + name + '» не влезает в комнату.');
+        return false;
+    }
+    // Проверяем оба варианта (как есть и повёрнутый)
+    const fitsNormal    = (w <= roomW) && (h <= roomH);
+    const fitsRotated   = (h <= roomW) && (w <= roomH);
+
+    if (!fitsNormal && !fitsRotated) {
+        alert('«' + name + '» ' + w + '×' + h + ' м не влезает в комнату ' +
+              roomW + '×' + roomH + ' м.\n\nУменьшите мебель или увеличьте комнату.');
+        return false;
+    }
+    return true;
+}
+
+// === ПОИСК СВОБОДНОГО МЕСТА ===
+function findFreeSpot(wMeters, hMeters) {
+    const stepPx = 50; // 0.5 м
+    const roomPx = room.clientWidth;
+    const roomPxH = room.clientHeight;
+    const wPx = wMeters * SCALE;
+    const hPx = hMeters * SCALE;
+
+    for (let y = 0; y + hPx <= roomPxH; y += stepPx) {
+        for (let x = 0; x + wPx <= roomPx; x += stepPx) {
+            let overlaps = false;
+            room.querySelectorAll('.furniture').forEach(other => {
+                if (overlaps) return;
+                const ox = other.offsetLeft;
+                const oy = other.offsetTop;
+                const ow = other.offsetWidth;
+                const oh = other.offsetHeight;
+                if (!(x + wPx <= ox || x >= ox + ow || y + hPx <= oy || y >= oy + oh)) {
+                    overlaps = true;}
+            });
+            if (!overlaps) return { x, y };
+        }
+    }
+    return { x: 0, y: 0 };
+}
+
+// === СОЗДАНИЕ ПРЕДМЕТА ===
 function createFurnitureElement(name, w, h, color) {
     const el = document.createElement('div');
     el.className = 'furniture';
@@ -93,46 +145,47 @@ function createFurnitureElement(name, w, h, color) {
     label.textContent = name;
     el.appendChild(label);
 
-    // Кнопка поворота
     const rotateBtn = document.createElement('button');
     rotateBtn.className = 'rotate-btn';
     rotateBtn.textContent = '↻';
     rotateBtn.title = 'Повернуть на 90°';
 
-    // Не даём кнопке запускать перетаскивание
     rotateBtn.addEventListener('mousedown', e => e.stopPropagation());
     rotateBtn.addEventListener('touchstart', e => e.stopPropagation(), { passive: true });
 
-    // Обработчик: и клик, и тач
-    function doRotate(e) {
+    rotateBtn.onclick = function(e) {
         e.stopPropagation();
         e.preventDefault();
         rotateItem(el);
-    }
-    rotateBtn.addEventListener('click', doRotate);
-    rotateBtn.addEventListener('touchend', doRotate);
+    };
 
     el.appendChild(rotateBtn);
-
     makeDraggable(el);
     return el;
 }
 
+// === ДОБАВЛЕНИЕ ГОТОВОЙ МЕБЕЛИ ===
 document.querySelectorAll('.tool-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.onclick = function() {
         const t = LIB[btn.dataset.type];
         if (!t) return;
+
+        if (!checkFits(t.name
+, t.w, t.h)) return;
+
         const el = createFurnitureElement(t.name
 , t.w, t.h, t.color);
+        const spot = findFreeSpot(t.w, t.h);
+        el.style.left = spot.x + 'px';
+        el.style.top
+  = spot.y + 'px';
         room.appendChild(el);
         saveState();
-    });
+    };
 });
 
-// Своя мебель
-const addCustomBtn = document.getElementById('add-custom');
-
-function addCustom() {
+// === ДОБАВЛЕНИЕ СВОЕЙ МЕБЕЛИ ===
+document.getElementById('add-custom').onclick = function() {
     const name = document.getElementById('f-name').value.trim() || 'Мебель';
     let w = parseFloat(document.getElementById('f-w').value);
     let h = parseFloat(document.getElementById('f-h').value);
@@ -142,26 +195,31 @@ function addCustom() {
     if (w > 5) w = 5;
     if (h > 5) h = 5;
 
-    const color = CUSTOM_
-COLORS[colorIndex % CUSTOM_COLORS.length];
+    if (!checkFits(name, w, h)) return;
+
+    const color = CUSTOM_COLORS[colorIndex % CUSTOM_COLORS.length];
     colorIndex++;
 
     const el = createFurnitureElement(name, w, h, color);
+    const spot = findFreeSpot(w, h);
+    el.style.left = spot.x + 'px';
+    el.style.top
+  = spot.y + 'px';
     room.appendChild(el);
     document.getElementById('f-name').value = '';
     saveState();
-}
-
-addCustomBtn.addEventListener('click', addCustom);
-addCustomBtn.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    addCustom();
-});
+};
 
 // === ПОВОРОТ ===
 function rotateItem(el) {
     const oldW = parseFloat(el.dataset.w);
     const oldH = parseFloat(el.dataset.h);
+
+    // Проверяем, влезет ли повёрнутый предмет
+    if (oldW > roomW && oldH > roomH) {
+        alert('После поворота предмет не влезет в комнату.');
+        return;
+    }
 
     el.dataset.w = oldH;
     el.dataset.h = oldW;
@@ -177,6 +235,7 @@ function rotateItem(el) {
 function makeDraggable(el) {
     let startX = 0, startY = 0;
     let startLeft = 0, startTop = 0;
+    let isActive = false;
 
     function getPos(e) {
         if (e.touches && e.touches.length > 0) {
@@ -186,7 +245,6 @@ function makeDraggable(el) {
     }
 
     function onStart(e) {
-        // Если нажали на кнопку поворота — не начинаем перетаскивание
         if (e.target.classList.contains('rotate-btn')) return;
 
         e.preventDefault();
@@ -195,6 +253,7 @@ function makeDraggable(el) {
         startY = pos.y;
         startLeft = el.offsetLeft;
         startTop  = el.offsetTop;
+        isActive = true;
         el.classList.add('dragging');
 
         document.addEventListener('mousemove', onMove);
@@ -205,6 +264,7 @@ function makeDraggable(el) {
     }
 
     function onMove(e) {
+        if (!isActive) return;
         e.preventDefault();
         const pos = getPos(e);
         const dx = pos.x - startX;
@@ -233,6 +293,7 @@ function makeDraggable(el) {
     }
 
     function onEnd() {
+        isActive = false;
         el.classList.remove('dragging');
         document.removeEventListener('mousemove', onMove);
         document.removeEventListener('mouseup', onEnd);
@@ -247,11 +308,11 @@ function makeDraggable(el) {
 }
 
 // === ОЧИСТКА ===
-document.getElementById('clear-btn').addEventListener('click', () => {
+document.getElementById('clear-btn').onclick = function() {
     if (!confirm('Удалить всю мебель?')) return;
     room.innerHTML = '';
     saveState();
-});
+};
 
 // === СОХРАНЕНИЕ ===
 function saveState() {
