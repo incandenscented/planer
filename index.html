@@ -6,38 +6,67 @@
     <title>Планировщик квартиры</title>
 </head>
 <body>
+
+    <div id="visits-badge" class="visits-badge">
+        👣 Визитов: <span id="visits-count">1</span>
+    </div>
+
     <h1>Планировщик квартиры</h1>
-    <p>Задайте размеры, расставьте мебель и поворачивайте её кнопкой ↻</p>
+    <p>Задайте размеры, добавьте мебель и расставьте её</p>
 
     <div class="app">
         <div class="toolbox">
 
             <h3>📐 Комната</h3>
-            <label>Ширина (м): <input id="room-w" type="number" value="5" min="2" max="8" step="0.5"></label>
-            <label>Длина (м):  <input id="room-h" type="number" value="4" min="2" max="8" step="0.5"></label>
+            <label>Ширина (м): <input id="room-w" type="number" value="6" min="2" max="10" step="0.5"></label>
+            <label>Длина (м):  <input id="room-h" type="number" value="5" min="2" max="10" step="0.5"></label>
             <button id="apply-room" class="apply-btn">Применить</button>
 
             <hr>
 
-            <h3>🛋 Готовая мебель</h3>
-            <button class="tool-btn" data-type="sofa">🛋 Диван (2×1 м)</button>
-            <button class="tool-btn" data-type="table">🪑 Стол (1×1 м)</button>
-            <button class="tool-btn" data-type="wardrobe">🚪 Шкаф (1×0.5 м)</button>
-            <button class="tool-btn" data-type="bed">🛏 Кровать (2×1.5 м)</button>
+            <h3>🛋 Мебель</h3>
+            <div class="btn-grid">
+                <button class="tool-btn" data-type="sofa">🛋 Диван</button>
+                <button class="tool-btn" data-type="armchair">💺 Кресло</button>
+                <button class="tool-btn" data-type="chair">🪑 Стул</button>
+                <button class="tool-btn" data-type="table">🟫 Стол</button>
+                <button class="tool-btn" data-type="table_round">⭕ Круглый</button>
+                <button class="tool-btn" data-type="wardrobe">🚪 Шкаф</button>
+                <button class="tool-btn" data-type="bed">🛏 Кровать</button>
+                <button class="tool-btn" data-type="lamp">💡 Торшер</button>
+                <button class="tool-btn" data-type="plant">🌿 Растение</button>
+            </div>
 
             <hr>
 
             <h3>➕ Своя мебель</h3>
-            <input id="f-name" type="text" placeholder="Название (напр. Комод)" maxlength="12">
+            <input id="f-name" type="text" placeholder="Название" maxlength="14">
+            <label>Форма:
+                <select id="f-shape">
+                    <option value="rect">Прямоугольник</option>
+                    <option value="rounded">Скругление</option>
+                    <option value="round">Круг</option>
+                    <option value="oval">Овал</option>
+                </select>
+            </label>
             <label>Ширина (м): <input id="f-w" type="number" value="1" min="0.5" max="5" step="0.5"></label>
             <label>Глубина (м): <input id="f-h" type="number" value="1" min="0.5" max="5" step="0.5"></label>
             <button id="add-custom" class="apply-btn">Добавить</button>
 
             <hr>
 
-            <p class="hint">💡 Нажмите ↻ на предмете, чтобы повернуть его на 90°</p>
+            <h3>🏛 Инструменты архитектора</h3>
+            <button id="btn-balcony" class="arch-btn">🏠 Пристроить балкон</button>
+            <button id="btn-ergo" class="arch-btn">📏 Проверить эргономику</button>
+            <button id="btn-photo" class="arch-btn">📷 Замер по фото</button>
 
+            <hr>
+
+            <h3>💾 Действия</h3>
+            <button id="save-png" class="save-btn">📸 Сохранить PNG</button>
             <button id="clear-btn">🗑 Очистить всё</button>
+
+            <p class="hint">💡 На предмете: ✕ — удалить, ↻ — повернуть</p>
         </div>
 
         <div class="room-wrapper">
@@ -45,6 +74,52 @@
         </div>
     </div>
 
+    <!-- ===== МОДАЛКА: БАЛКОН ===== -->
+    <div id="balcony-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>🏠 Пристроить балкон</h3>
+            <p class="hint">Балкон пристраивается к одной из стен комнаты</p>
+            <label>Сторона:
+                <select id="balcony-side">
+                    <option value="top">Сверху</option>
+                    <option value="bottom">Снизу</option>
+                    <option value="left">Слева</option>
+                    <option value="right">Справа</option>
+                </select>
+            </label>
+            <label>Глубина (м): <input id="balcony-depth" type="number" value="1.5" min="0.8" max="3" step="0.1"></label>
+            <label>Ширина проёма (м): <input id="balcony-opening" type="number" value="1" min="0.6" max="3" step="0.1"></label>
+            <button id="balcony-apply" class="apply-btn">Пристроить</button>
+            <button id="balcony-remove" class="apply-btn danger">Удалить балкон</button>
+            <button id="balcony-close" class="apply-btn gray">Отмена</button>
+        </div>
+    </div>
+
+    <!-- ===== МОДАЛКА: ЗАМЕР ПО ФОТО ===== -->
+    <div id="photo-modal" class="modal hidden">
+        <div class="modal-content wide">
+            <h3>📷 Замер комнаты по фото</h3>
+            <p class="hint">1) Загрузите фото<br>2) Кликните 2 точки на известном отрезке<br>3) Введите реальное расстояние</p>
+            <input type="file" id="photo-input" accept="image/*">
+            <div id="photo-container" class="photo-container">
+                <img id="photo-img" src="" alt="">
+                <div id="photo-grid" class="photo-grid"></div>
+                <div class="photo-point" id="pt1"></div>
+                <div class="photo-point" id="pt2"></div>
+            </div>
+            <div class="photo-controls">
+                <label id="photo-dist-label" class="hidden">
+                    Расстояние (м): <input id="photo-dist" type="number" value="1" step="0.1" min="0.1">
+                </label>
+                <button id="photo-apply" class="apply-btn hidden">Применить масштаб</button>
+                <button id="photo-reset" class="apply-btn gray">Сбросить</button>
+                <button id="photo-close" class="apply-btn danger">Закрыть</button>
+            </div>
+            <div class="photo-info" id="photo-info"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
