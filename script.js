@@ -25,7 +25,7 @@ let colorIndex = 0;
 
 let roomW = 6;
 let roomH = 5;
-let balcony = null; // { side, depth, opening }
+let balcony = null;
 
 // ============================================================
 // 1. СЧЁТЧИК ПОСЕЩЕНИЙ
@@ -34,7 +34,8 @@ let balcony = null; // { side, depth, opening }
     let visits = parseInt(localStorage.getItem('planner-visits') || '0', 10);
     visits++;
     localStorage.setItem('planner-visits', visits);
-    document.getElementById('visits-count').textContent = visits;
+    const el = document.getElementById('visits-count');
+    if (el) el.textContent = visits;
 })();
 
 // ============================================================
@@ -51,9 +52,9 @@ function totalRoomSize() {
 }
 
 function updateRoomSize() {
-    const { w, h } = totalRoomSize();
-    room.style.width  = (w * SCALE) + 'px';
-    room.style.height = (h * SCALE) + 'px';
+    const size = totalRoomSize();
+    room.style.width  = (size.w * SCALE) + 'px';
+    room.style.height = (size.h * SCALE) + 'px';
     renderBalcony();
 }
 
@@ -80,55 +81,48 @@ document.getElementById('apply-room').addEventListener('click', applyRoomSize);
 // 3. БАЛКОН
 // ============================================================
 function renderBalcony() {
-    // Удаляем старую зону балкона
     const old = room.querySelector('.balcony-zone');
     if (old) old.remove();
-
     if (!balcony) return;
 
     const zone = document.createElement('div');
     zone.className = 'balcony-zone';
 
     const d = balcony.depth * SCALE;
-    const totalW = (roomW + (balcony.side === 'left' || balcony.side === 'right' ? balcony.depth : 0)) * SCALE;
-    const totalH = (roomH + (balcony.side === 'top'  || balcony.side === 'bottom' ? balcony.depth : 0)) * SCALE;
+    const totalW = room.clientWidth;
+    const totalH = room.clientHeight;
 
     if (balcony.side === 'top') {
-        zone.style.cssText = `top:0; left:0; width:${totalW}px; height:${d}px; border-top:none; border-left:none; border-right:none;`;
+        zone.style.cssText = 'top:0; left:0; width:' + totalW + 'px; height:' + d + 'px;';
     } else if (balcony.side === 'bottom') {
-        zone.style.cssText = `bottom:0; left:0; width:${totalW}px; height:${d}px; border-bottom:none; border-left:none; border-right:none;`;
-    }else if (balcony.side === 'left') {
-        zone.style.cssText = `top:0; left:0; width:${d}px; height:${totalH}px; border-top:none; border-bottom:none; border-left:none;`;
+        zone.style.cssText = 'bottom:0; left:0; width:' + totalW + 'px; height:' + d + 'px;';
+    } else if (balcony.side === 'left') {
+        zone.style.cssText = 'top:0; left:0; width:' + d + 'px; height:' + totalH + 'px;';
     } else if (balcony.side === 'right') {
-        zone.style.cssText = `top:0; right:0; width:${d}px; height:${totalH}px; border-top:none; border-bottom:none; border-right:none;`;
-    }
-
-    // Подпись
-    const label = document.createElement('div');
+        zone.style.cssText = 'top:0; right:0; width:' + d + 'px; height:' + totalH + 'px;';
+    }const label = document.createElement('div');
     label.className = 'balcony-label';
     label.textContent = 'Балкон (' + balcony.depth + ' м)';
     zone.appendChild(label);
 
-    // Проём в стене между комнатой и балконом
     const opening = document.createElement('div');
     opening.className = 'opening';
     const op = balcony.opening * SCALE;
 
     if (balcony.side === 'top') {
-        opening.style.cssText = `bottom:-2px; left:50%; transform:translateX(-50%); width:${op}px; height:8px;`;
+        opening.style.cssText = 'bottom:-2px; left:50%; transform:translateX(-50%); width:' + op + 'px; height:8px;';
     } else if (balcony.side === 'bottom') {
-        opening.style.cssText = `top:-2px; left:50%; transform:translateX(-50%); width:${op}px; height:8px;`;
+        opening.style.cssText = 'top:-2px; left:50%; transform:translateX(-50%); width:' + op + 'px; height:8px;';
     } else if (balcony.side === 'left') {
-        opening.style.cssText = `right:-2px; top:50%; transform:translateY(-50%); height:${op}px; width:8px;`;
+        opening.style.cssText = 'right:-2px; top:50%; transform:translateY(-50%); height:' + op + 'px; width:8px;';
     } else if (balcony.side === 'right') {
-        opening.style.cssText = `left:-2px; top:50%; transform:translateY(-50%); height:${op}px; width:8px;`;
+        opening.style.cssText = 'left:-2px; top:50%; transform:translateY(-50%); height:' + op + 'px; width:8px;';
     }
     zone.appendChild(opening);
 
     room.appendChild(zone);
 }
 
-// Модалка балкона
 const balconyModal = document.getElementById('balcony-modal');
 document.getElementById('btn-balcony').addEventListener('click', () => {
     if (balcony) {
@@ -138,11 +132,9 @@ document.getElementById('btn-balcony').addEventListener('click', () => {
     }
     balconyModal.classList.remove('hidden');
 });
-
 document.getElementById('balcony-close').addEventListener('click', () => {
     balconyModal.classList.add('hidden');
 });
-
 document.getElementById('balcony-apply').addEventListener('click', () => {
     const side = document.getElementById('balcony-side').value;
     let depth = parseFloat(document.getElementById('balcony-depth').value);
@@ -152,17 +144,13 @@ document.getElementById('balcony-apply').addEventListener('click', () => {
     if (isNaN(opening) || opening < 0.6) opening = 0.6;
     if (opening > 3) opening = 3;
 
-    balcony = { side, depth, opening };
+    balcony = { side: side, depth: depth, opening: opening };
     updateRoomSize();
     saveState();
     balconyModal.classList.add('hidden');
 });
-
 document.getElementById('balcony-remove').addEventListener('click', () => {
-    if (!balcony) {
-        alert('Балкона пока нет.');
-        return;
-    }
+    if (!balcony) { alert('Балкона пока нет.'); return; }
     if (!confirm('Удалить балкон?')) return;
     balcony = null;
     updateRoomSize();
@@ -171,17 +159,17 @@ document.getElementById('balcony-remove').addEventListener('click', () => {
 });
 
 // ============================================================
-// 4. УДЕРЖАТЬ МЕБЕЛЬ В ГРАНИЦАХ
+// 4. УДЕРЖАТЬ В ГРАНИЦАХ
 // ============================================================
 function clampItem(el) {
-    const w = parseFloat(el.dataset.w) * SCALE;
-    const h = parseFloat(el.dataset.h) * SCALE;
+    const wPx = parseFloat(el.dataset.w) * SCALE;
+    const hPx = parseFloat(el.dataset.h) * SCALE;
 
     let left = el.offsetLeft;
     let top  = el.offsetTop;
 
-    const maxLeft = room.clientWidth  - w;
-    const maxTop  = room.clientHeight - h;
+    const maxLeft = room.clientWidth  - wPx;
+    const maxTop  = room.clientHeight - hPx;
 
     if (maxLeft < 0) left = 0; else if (left > maxLeft) left = maxLeft;
     if (maxTop  < 0) top  = 0; else if (top  > maxTop)  top  = maxTop;
@@ -198,14 +186,14 @@ function clampItem(el) {
 }
 
 // ============================================================
-// 5. ПРОВЕРКА РАЗМЕРОВ И ПОИСК МЕСТА
+// 5. ПРОВЕРКА И ПОИСК МЕСТА
 // ============================================================
 function checkFits(name, w, h) {
-    const { w: rw, h: rh } = totalRoomSize();
-    const fitsNormal  = (w <= rw && h <= rh);
-    const fitsRotated = (h <= rw && w <= rh);
+    const size = totalRoomSize();
+    const fitsNormal  = (w <= size.w && h <= size.h);
+    const fitsRotated = (h <= size.w && w <= size.h);
     if (!fitsNormal && !fitsRotated) {
-        alert('«' + name + '» ' + w + '×' + h + ' м не влезает в комнату ' + rw + '×' + rh + ' м.');
+        alert('«' + name + '» ' + w + '×' + h + ' м не влезает в комнату ' + size.w + '×' + size.h + ' м.');
         return false;
     }
     return true;
@@ -219,9 +207,9 @@ function findFreeSpot(wMeters, hMeters) {
     const hPx = hMeters * SCALE;
 
     for (let y = 0; y + hPx <= roomPxH; y += stepPx) {
-        for (let x = 0; x + wPx <= roomPx; x += stepPx) {
+        for (let x = 0; x + wPx <= roomPxW; x += stepPx) {
             let overlaps = false;
-            room.querySelectorAll('.furniture').forEach(other => {
+            room.querySelectorAll('.furniture').forEach(function(other) {
                 if (overlaps) return;
                 if (!(x + wPx <= other.offsetLeft ||
                       x >= other.offsetLeft + other.offsetWidth ||
@@ -230,7 +218,7 @@ function findFreeSpot(wMeters, hMeters) {
                     overlaps = true;
                 }
             });
-            if (!overlaps) return { x, y };
+            if (!overlaps) return { x: x, y: y };
         }
     }
     return { x: 0, y: 0 };
@@ -267,13 +255,12 @@ function createFurnitureElement(name, w, h, color, shape, left, top) {
     sizeSpan.textContent = w + '×' + h + ' м';
     el.appendChild(sizeSpan);
 
-    // Кнопка удаления
     const delBtn = document.createElement('button');
     delBtn.className = 'delete-btn';
     delBtn.textContent = '✕';
-    delBtn.addEventListener('mousedown', e => e.stopPropagation());
-    delBtn.addEventListener('touchstart', e => e.stopPropagation(), { passive: true });
-    delBtn.addEventListener('click', e => {
+    delBtn.addEventListener('mousedown', function(e) { e.stopPropagation(); });
+    delBtn.addEventListener('touchstart', function(e) { e.stopPropagation(); }, { passive: true });
+    delBtn.addEventListener('click', function(e) {
         e.stopPropagation();
         e.preventDefault();
         el.remove();
@@ -281,13 +268,12 @@ function createFurnitureElement(name, w, h, color, shape, left, top) {
     });
     el.appendChild(delBtn);
 
-    // Кнопка поворота
     const rotBtn = document.createElement('button');
     rotBtn.className = 'rotate-btn';
     rotBtn.textContent = '↻';
-    rotBtn.addEventListener('mousedown', e => e.stopPropagation());
-    rotBtn.addEventListener('touchstart', e => e.stopPropagation(), { passive: true });
-    rotBtn.addEventListener('click', e => {
+    rotBtn.addEventListener('mousedown', function(e) { e.stopPropagation(); });
+    rotBtn.addEventListener('touchstart', function(e) { e.stopPropagation(); }, { passive: true });
+    rotBtn.addEventListener('click', function(e) {
         e.stopPropagation();
         e.preventDefault();
         rotateItem(el);
@@ -299,20 +285,33 @@ function createFurnitureElement(name, w, h, color, shape, left, top) {
 }
 
 // ============================================================
-// 7. ДОБАВЛЕНИЕ МЕБЕЛИ
+// 7. ДОБАВЛЕНИЕ ГОТОВОЙ МЕБЕЛИ
 // ============================================================
-document.querySelectorAll('.tool-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+document.querySelectorAll('.tool-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
         const t = LIB[btn.dataset.type];
         if (!t) return;
         if (!checkFits(t.name
 , t.w, t.h)) return;
 
-        const spot = findFreeSpot(t.w, t.h);
+        const position = findFreeSpot(t.w, t.h);
         const el = createFurnitureElement(t.name
-, t.w, t.h, t.color, t.shape, spot.x, spot.y);
+, t.w, t.h, t.color, t.shape, position.x, position.y);
         room.appendChild(el);
-        saveState();w = 0.5;
+        saveState();
+    });
+});
+
+// ============================================================
+// 8. ДОБАВЛЕНИЕ СВОЕЙ МЕБЕЛИ
+// ============================================================
+document.getElementById('add-custom').addEventListener('click', function() {
+    const name = document.getElementById('f-name').value.trim() || 'Мебель';
+    const shape = document.getElementById('f-shape').value;
+    let w = parseFloat(document.getElementById('f-w').value);
+    let h = parseFloat(document.getElementById('f-h').value);
+
+    if (isNaN(w) || w < 0.5) w = 0.5;
     if (isNaN(h) || h < 0.5) h = 0.5;
     if (w > 5) w = 5;
     if (h > 5) h = 5;
@@ -322,8 +321,8 @@ document.querySelectorAll('.tool-btn').forEach(btn => {
     const color = CUSTOM_COLORS[colorIndex % CUSTOM_COLORS.length];
     colorIndex++;
 
-    const spot = findFreeSpot(w, h);
-    const el = createFurnitureElement(name, w, h, color, shape, spot.x, spot.y);
+    const position = findFreeSpot(w, h);
+    const el = createFurnitureElement(name, w, h, color, shape, position.x, position.y);
     room.appendChild(el);
 
     document.getElementById('f-name').value = '';
@@ -331,7 +330,7 @@ document.querySelectorAll('.tool-btn').forEach(btn => {
 });
 
 // ============================================================
-// 8. ПОВОРОТ
+// 9. ПОВОРОТ
 // ============================================================
 function rotateItem(el) {
     const oldW = parseFloat(el.dataset.w);
@@ -351,7 +350,7 @@ function rotateItem(el) {
 }
 
 // ============================================================
-// 9. ПЕРЕТАСКИВАНИЕ
+// 10. ПЕРЕТАСКИВАНИЕ
 // ============================================================
 function makeDraggable(el) {
     let startX = 0, startY = 0, startLeft = 0, startTop = 0, isActive = false;
@@ -385,14 +384,14 @@ function makeDraggable(el) {
         const dx = pos.x - startX;
         const dy = pos.y - startY;
 
-        const wM = parseFloat(el.dataset.w) * SCALE;
-        const hM = parseFloat(el.dataset.h) * SCALE;
+        const wPx = parseFloat(el.dataset.w) * SCALE;
+        const hPx = parseFloat(el.dataset.h) * SCALE;
 
         let newLeft = Math.round((startLeft + dx) / 50) * 50;
         let newTop  = Math.round((startTop  + dy) / 50) * 50;
 
-        const maxLeft = room.clientWidth  - wM;
-        const maxTop  = room.clientHeight - hM;
+        const maxLeft = room.clientWidth  - wPx;
+        const maxTop  = room.clientHeight - hPx;
 
         if (newLeft < 0) newLeft = 0;
         if (newTop  < 0) newTop  = 0;
@@ -420,11 +419,11 @@ function makeDraggable(el) {
 }
 
 // ============================================================
-// 10. ЭРГОНОМИКА
+// 11. ЭРГОНОМИКА
 // ============================================================
-document.getElementById('btn-ergo').addEventListener('click', () => {
+document.getElementById('btn-ergo').addEventListener('click', function() {
     const items = Array.from(room.querySelectorAll('.furniture'));
-    items.forEach(el => el.classList.remove('ergo-warning'));
+    items.forEach(function(el) { el.classList.remove('ergo-warning'); });
 
     if (items.length < 2) {
         alert('Добавьте минимум 2 предмета мебели для проверки.');
@@ -434,12 +433,13 @@ document.getElementById('btn-ergo').addEventListener('click', () => {
     const violations = [];
 
     for (let i = 0; i < items.length; i++) {
-        for (let j = i + 1; j < items.length;j++) {
+        for (let j = i + 1; j < items.length; j++) {
             const a = items[i], b = items[j];
-            const aL = a.offsetLeft, aT = a.offsetTop, aR = aL + a.offsetWidth, aB = aT + a.offsetHeight;
-            const bL = b.offsetLeft, bT = b.offsetTop, bR = bL + b.offsetWidth, bB = bT + b.offsetHeight;
+            const aL = a.offsetLeft, aT = a.offsetTop;
+            const aR = aL + a.offsetWidth, aB = aT + a.offsetHeight;
+            const bL = b.offsetLeft, bT = b.offsetTop;
+            const bR = bL + b.offsetWidth, bB = bT + b.offsetHeight;
 
-            // Расстояние по осям
             const dx = Math.max(0, Math.max(aL, bL) - Math.min(aR, bR));
             const dy = Math.max(0, Math.max(aT, bT) - Math.min(aB, bB));
 
@@ -450,32 +450,29 @@ document.getElementById('btn-ergo').addEventListener('click', () => {
             if (overlap) {
                 a.classList.add('ergo-warning');
                 b.classList.add('ergo-warning');
-                violations.push('❗ Пересечение: ' + a.dataset.name
+                violations.push('Пересечение: ' + a.dataset.name
  + ' ↔ ' + b.dataset.name
 );
             } else if (horizGap) {
                 a.classList.add('ergo-warning');
                 b.classList.add('ergo-warning');
-                violations.push('⚠ Проход ' + Math.round(dx) + ' см: ' + a.dataset.name
+                violations.push('Проход ' + Math.round(dx) + ' см: ' + a.dataset.name
  + ' ↔ ' + b.dataset.name
 );
             } else if (vertGap) {
                 a.classList.add('ergo-warning');
                 b.classList.add('ergo-warning');
-                violations.push('⚠ Проход ' + Math.round(dy) + ' см: ' + a.dataset.name
+                violations.push('Проход ' + Math.round(dy) + ' см: ' + a.dataset.name
  + ' ↔ ' + b.dataset.name
 );
             }
         }
     }
 
-    // Проверка расстояния до стен (0 см — мебель вплотную к стене — это нормально для шкафа, но плохо для прохода)
-    // Оставим только общий отчёт по парам.
-
     if (violations.length === 0) {
-        alert('✅ Эргономика в порядке!\n\nВсе проходы между мебелью — не менее 60 см.');
+        alert('Эргономика в порядке! Все проходы между мебелью — не менее 60 см.');
     } else {
-        alert('🔍 Найдено проблем: ' + violations.length + '\n\n' +
+        alert('Найдено проблем: ' + violations.length + '\n\n' +
               violations.slice(0, 15).join('\n') +
               (violations.length > 15 ? '\n... и ещё ' + (violations.length - 15) : '') +
               '\n\nКрасной рамкой помечены проблемные предметы.');
@@ -483,7 +480,7 @@ document.getElementById('btn-ergo').addEventListener('click', () => {
 });
 
 // ============================================================
-// 11. ЗАМЕР ПО ФОТО
+// 12. ЗАМЕР ПО ФОТО
 // ============================================================
 const photoModal = document.getElementById('photo-modal');
 const photoInput = document.getElementById('photo-input');
@@ -497,30 +494,29 @@ const photoDistLabel = document.getElementById('photo-dist-label');
 const photoDist = document.getElementById('photo-dist');
 const photoApply = document.getElementById('photo-apply');
 
-let points = []; // [ {x,y}, {x,y} ]
+let photoPoints = [];
 let pixelDistance = 0;
 
-document.getElementById('btn-photo').addEventListener('click', () => {
+document.getElementById('btn-photo').addEventListener('click', function() {
     photoModal.classList.remove('hidden');
 });
-
-document.getElementById('photo-close').addEventListener('click', () => {
+document.getElementById('photo-close').addEventListener('click', function() {
     photoModal.classList.add('hidden');
 });
 
-photoInput.addEventListener('change', (e) => {
+photoInput.addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
     const url = URL.createObjectURL(file);
     photoImg.src = url;
-    photoImg.onload = () => {
+    photoImg.onload = function() {
         resetPhotoPoints();
         photoInfo.textContent = 'Кликните две точки на известном расстоянии';
     };
 });
 
 function resetPhotoPoints() {
-    points = [];
+    photoPoints = [];
     pixelDistance = 0;
     pt1.classList.remove('visible');
     pt2.classList.remove('visible');
@@ -532,7 +528,7 @@ function resetPhotoPoints() {
 
 document.getElementById('photo-reset').addEventListener('click', resetPhotoPoints);
 
-photoContainer.addEventListener('click', (e) => {
+photoContainer.addEventListener('click', function(e) {
     if (!photoImg.src) return;
 
     const rect = photoContainer.getBoundingClientRect();
@@ -540,26 +536,25 @@ photoContainer.addEventListener('click', (e) => {
     const y = e.clientY - rect.top
   + photoContainer.scrollTop;
 
-    if (points.length >= 2) {
-        // Сбрасываем и начинаем заново
+    if (photoPoints.length >= 2) {
         resetPhotoPoints();
     }
 
-    points.push({ x, y });
+    photoPoints.push({ x: x, y: y });
 
-    if (points.length === 1) {
+    if (photoPoints.length === 1) {
         pt1.style.left = x + 'px';
         pt1.style.top
   = y + 'px';
         pt1.classList.add('visible');
-        photoInfo.textContent = 'Точка 1 установлена. Кликните вторую точку.';
-    } else if (points.length === 2) {
+        photoInfo.textContent ='Точка 1 установлена. Кликните вторую точку.';
+    } else if (photoPoints.length === 2) {
         pt2.style.left = x + 'px';
         pt2.style.top
   = y + 'px';
         pt2.classList.add('visible');
 
-        pixelDistance = Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y);
+        pixelDistance = Math.hypot(photoPoints[1].x - photoPoints[0].x, photoPoints[1].y - photoPoints[0].y);
 
         photoInfo.textContent = 'Расстояние между точками: ' + Math.round(pixelDistance) + ' px. Укажите реальную длину.';
         photoDistLabel.classList.remove('hidden');
@@ -567,7 +562,7 @@ photoContainer.addEventListener('click', (e) => {
     }
 });
 
-photoApply.addEventListener('click', () => {
+photoApply.addEventListener('click', function() {
     const realMeters = parseFloat(photoDist.value);
     if (isNaN(realMeters) || realMeters <= 0) {
         alert('Введите корректное расстояние в метрах.');
@@ -576,52 +571,48 @@ photoApply.addEventListener('click', () => {
     if (pixelDistance <= 0) return;
 
     const pxPerMeter = pixelDistance / realMeters;
-
     photoGrid.classList.add('visible');
     photoGrid.style.backgroundSize = pxPerMeter + 'px ' + pxPerMeter + 'px';
 
-    photoInfo.textContent =
-        '✅ Масштаб применён!\n' +
-        '1 метр = ' + Math.round(pxPerMeter) + ' пикселей.\n' +
-        'Одна клетка сетки = 1 м.';
+    photoInfo.textContent = 'Масштаб применён! 1 метр = ' + Math.round(pxPerMeter) + ' пикселей. Одна клетка = 1 м.';
 });
 
 // ============================================================
-// 12. СОХРАНЕНИЕ PNG
+// 13. СОХРАНЕНИЕ PNG
 // ============================================================
-document.getElementById('save-png').addEventListener('click', () => {
+document.getElementById('save-png').addEventListener('click', function() {
     const btns = document.querySelectorAll('.rotate-btn, .delete-btn');
-    btns.forEach(b => b.style.visibility = 'hidden');
+    btns.forEach(function(b) { b.style.visibility = 'hidden'; });
 
-    html2canvas(room, { backgroundColor: '#fafafa', scale: 2 }).then(canvas => {
-        btns.forEach(b => b.style.visibility = 'visible');
+    html2canvas(room, { backgroundColor: '#fafafa', scale: 2 }).then(function(canvas) {
+        btns.forEach(function(b) { b.style.visibility = 'visible'; });
         const link = document.createElement('a');
         link.download
  = 'plan-kvartiry.png';
         link.href = canvas.toDataURL('image/png');
         link.click
 ();
-    }).catch(err => {
-        btns.forEach(b => b.style.visibility = 'visible');
+    }).catch(function(err) {
+        btns.forEach(function(b) { b.style.visibility = 'visible'; });
         alert('Не удалось сохранить картинку: ' + err.message);
     });
 });
 
 // ============================================================
-// 13. ОЧИСТКА
+// 14. ОЧИСТКА
 // ============================================================
-document.getElementById('clear-btn').addEventListener('click', () => {
+document.getElementById('clear-btn').addEventListener('click', function() {
     if (!confirm('Удалить всю мебель?')) return;
-    room.querySelectorAll('.furniture').forEach(el => el.remove());
+    room.querySelectorAll('.furniture').forEach(function(el) { el.remove(); });
     saveState();
 });
 
 // ============================================================
-// 14. СОХРАНЕНИЕ / ЗАГРУЗКА
+// 15. СОХРАНЕНИЕ / ЗАГРУЗКА
 // ============================================================
 function saveState() {
     const items = [];
-    room.querySelectorAll('.furniture').forEach(el => {
+    room.querySelectorAll('.furniture').forEach(function(el) {
         items.push({
             name: el.dataset.name
 ,
@@ -635,7 +626,7 @@ function saveState() {
     });
     try {
         localStorage.setItem('planner-state-v2', JSON.stringify({
-            roomW, roomH, balcony, items
+            roomW: roomW, roomH: roomH, balcony: balcony, items: items
         }));
     } catch (e) {}
 }
@@ -653,14 +644,15 @@ function loadState() {
         document.getElementById('room-h').value = roomH;
         updateRoomSize();
 
-        (state.items || []).forEach(it => {
+        (state.items || []).forEach(function(it) {
             const el = createFurnitureElement(
                 it.name
 , it.w, it.h, it.color, it.shape,
                 parseFloat(it.left), parseFloat(it.top
 )
             );
-            room.appendChild(el);});
+            room.appendChild(el);
+        });
         return true;
     } catch (e) { return false; }
 }
@@ -668,13 +660,3 @@ function loadState() {
 if (!loadState()) {
     updateRoomSize();
 }
-    });
-});
-
-document.getElementById('add-custom').addEventListener('click', () => {
-    const name = document.getElementById('f-name').value.trim() || 'Мебель';
-    const shape = document.getElementById('f-shape').value;
-    let w = parseFloat(document.getElementById('f-w').value);
-    let h = parseFloat(document.getElementById('f-h').value);
-
-    if (isNaN(w) || w < 0.5)
