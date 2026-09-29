@@ -1,3 +1,4 @@
+
 const SCALE = 100, MIN_PASSAGE = 60;
 const room = document.getElementById('room');
 
@@ -91,7 +92,8 @@ function renderBalcony(){
     room.appendChild(z);
 }
 const bm = document.getElementById('balcony-modal');
-document.getElementById('btn-balcony').addEventListener('click', function(){if (balcony){
+document.getElementById('btn-balcony').addEventListener('click', function(){
+    if (balcony){
         document.getElementById('balcony-side').value = balcony.side;
         document.getElementById('balcony-depth').value = balcony.depth;
         document.getElementById('balcony-opening').value = balcony.opening;
@@ -133,8 +135,7 @@ room.addEventListener('click', function(e){
     if (!currentTool) return;
     if (e.target.classList.contains('furniture') || e.target.closest('.furniture')) return;
     const r = room.getBoundingClientRect();
-    const x = e.clientX - r.left, y = e.clientY - r.top
-;
+    const x = e.clientX - r.left, y = e.clientY - r.top;
     const near = 15;
     let side=null, pos=0;
     if (Math.abs(y)<near) { side='top'; pos=x/SCALE; }
@@ -183,8 +184,7 @@ function clamp(el){
     if (mt<0) t=0; else if (t>mt) t=mt;
     if (l<0) l=0; if (t<0) t=0;
     l = Math.round(l/50)*50; t = Math.round(t/50)*50;
-    el.style.left = l+'px'; el.style.top
- = t+'px';
+    el.style.left = l+'px'; el.style.top = t+'px';
 }
 function checkFits(name, w, h){
     const s = roomSize();
@@ -250,11 +250,9 @@ function createEl(name, w, h, color, shape, h3, left, top){
 document.querySelectorAll('.tool-btn[data-type]').forEach(function(b){
     b.addEventListener('click', function(){
         const t = LIB[b.dataset.type];
-        if (!t || !checkFits(t.name
-, t.w, t.h)) return;
+        if (!t || !checkFits(t.name, t.w, t.h)) return;
         const p = findFree(t.w, t.h);
-        room.appendChild(createEl(t.name
-, t.w, t.h, t.color, t.shape, t.h3, p.x, p.y));
+        room.appendChild(createEl(t.name, t.w, t.h, t.color, t.shape, t.h3, p.x, p.y));
         save();
     });
 });
@@ -408,8 +406,7 @@ document.getElementById('save-png').addEventListener('click', function(){
     html2canvas(room,{backgroundColor:'#fefefe',scale:2}).then(function(c){
         btns.forEach(function(b){b.style.visibility='visible';});
         const a = document.createElement('a');
-        a.download='plan.png'; a.href=c.toDataURL('image/png'); a.click
-();
+        a.download='plan.png'; a.href=c.toDataURL('image/png'); a.click();
     }).catch(function(err){
         btns.forEach(function(b){b.style.visibility='visible';});
         alert('Ошибка: '+err.message);
@@ -451,9 +448,7 @@ function load(){
         document.getElementById('room-h2').value=wallH;
         updateRoom();
         (s.items||[]).forEach(function(it){
-            const el = createEl(it.name
-,it.w,it.h,it.color,it.shape,it.height,parseFloat(it.left),parseFloat(it.top
-));
+            const el = createEl(it.name,it.w,it.h,it.color,it.shape,it.height,parseFloat(it.left),parseFloat(it.top));
             room.appendChild(el);
         });
         return true;
@@ -506,8 +501,7 @@ async function init3D(){
     sun.position.set(10,15,8); sun.castShadow = true;
     sun.shadow.mapSize.width = 2048; sun.shadow.mapSize.height = 2048;
     sun.shadow.camera.left = -15; sun.shadow.camera.right = 15;
-    sun.shadow.camera.top
- = 15; sun.shadow.camera.bottom = -15;
+    sun.shadow.camera.top = 15; sun.shadow.camera.bottom = -15;
     s3.add(sun);
 
     const g = new THREE.Mesh(
@@ -517,8 +511,7 @@ async function init3D(){
     g.rotation.x = -Math.PI/2; g.position.y = -0.01;
     g.receiveShadow = true; s3.add(g);
 
-    grp3 = new THREE.Group
-(); s3.add(grp3);
+    grp3 = new THREE.Group(); s3.add(grp3);
     init3 = true;
     build3D();
 
@@ -617,3 +610,5 @@ document.getElementById('view-3d').addEventListener('click', function(){
         if (init3) build3D();
     }, 50);
 });
+
+
