@@ -2,104 +2,192 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-    <title>Планировщик квартиры</title>
+    <title>Планировщик квартиры — архитектурный инструмент</title>
 </head>
 <body>
 
-    <div id="visits-badge" class="visits-badge">
-        👣 Визитов: <span id="visits-count">1</span>
-    </div>
+    <!-- ===== ПРИВЕТСТВЕННОЕ ОКНО ===== -->
+    <div id="welcome-modal" class="modal">
+        <div class="welcome-content">
+            <div class="welcome-icon">🏛</div>
+            <h1>Планировщик квартиры</h1>
+            <p class="welcome-sub">Инструмент для планирования интерьера с проверкой эргономики</p>
 
-    <h1>Планировщик квартиры</h1>
-    <p>Задайте размеры, добавьте мебель и расставьте её</p>
-
-    <div class="app">
-        <div class="toolbox">
-
-            <h3>📐 Комната</h3>
-            <label>Ширина (м): <input id="room-w" type="number" value="6" min="2" max="10" step="0.5"></label>
-            <label>Длина (м):  <input id="room-h" type="number" value="5" min="2" max="10" step="0.5"></label>
-            <button id="apply-room" class="apply-btn">Применить</button>
-
-            <hr>
-
-            <h3>🛋 Мебель</h3>
-            <div class="btn-grid">
-                <button class="tool-btn" data-type="sofa">🛋 Диван</button>
-                <button class="tool-btn" data-type="armchair">💺 Кресло</button>
-                <button class="tool-btn" data-type="chair">🪑 Стул</button>
-                <button class="tool-btn" data-type="table">🟫 Стол</button>
-                <button class="tool-btn" data-type="table_round">⭕ Круглый</button>
-                <button class="tool-btn" data-type="wardrobe">🚪 Шкаф</button>
-                <button class="tool-btn" data-type="bed">🛏 Кровать</button>
-                <button class="tool-btn" data-type="lamp">💡 Торшер</button>
-                <button class="tool-btn" data-type="plant">🌿 Растение</button>
+            <div class="welcome-features">
+                <div class="feature">
+                    <div class="feature-icon">📐</div>
+                    <h4>Размеры</h4>
+                    <p>Задайте параметры комнаты и мебели в метрах</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🚪</div>
+                    <h4>Двери и окна</h4>
+                    <p>Расставьте проёмы и укажите сторону открывания</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">📏</div>
+                    <h4>Эргономика</h4>
+                    <p>Проверка проходов по нормам СНиП (от 60 см)</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🎨</div>
+                    <h4>3D-просмотр</h4>
+                    <p>Посмотрите план в объёме и покрутите камерой</p>
+                </div>
             </div>
 
-            <hr>
+            <div class="welcome-steps">
+                <h3>Как пользоваться</h3>
+                <ol>
+                    <li>Задайте <strong>размеры комнаты</strong> и нажмите «Применить»</li>
+                    <li>Добавьте <strong>мебель</strong> — она появится на плане</li>
+                    <li>Перетаскивайте мышкой, поворачивайте ↻, удаляйте ✕</li>
+                    <li>Добавьте <strong>двери и окна</strong> — кликните по стене</li>
+                    <li>Нажмите <strong>«3D»</strong>, чтобы увидеть результат в объёме</li>
+                    <li>Проверьте <strong>эргономику</strong> и сохраните план</li>
+                </ol>
+            </div>
 
-            <h3>➕ Своя мебель</h3>
-            <input id="f-name" type="text" placeholder="Название" maxlength="14">
-            <label>Форма:
-                <select id="f-shape">
-                    <option value="rect">Прямоугольник</option>
-                    <option value="rounded">Скругление</option>
-                    <option value="round">Круг</option>
-                    <option value="oval">Овал</option>
-                </select>
-            </label>
-            <label>Ширина (м): <input id="f-w" type="number" value="1" min="0.5" max="5" step="0.5"></label>
-            <label>Глубина (м): <input id="f-h" type="number" value="1" min="0.5" max="5" step="0.5"></label>
-            <button id="add-custom" class="apply-btn">Добавить</button>
-
-            <hr>
-
-            <h3>🏛 Инструменты архитектора</h3>
-            <button id="btn-balcony" class="arch-btn">🏠 Пристроить балкон</button>
-            <button id="btn-ergo" class="arch-btn">📏 Проверить эргономику</button>
-            <button id="btn-photo" class="arch-btn">📷 Замер по фото</button>
-
-            <hr>
-
-            <h3>💾 Действия</h3>
-            <button id="save-png" class="save-btn">📸 Сохранить PNG</button>
-            <button id="clear-btn">🗑 Очистить всё</button>
-
-            <p class="hint">💡 На предмете: ✕ — удалить, ↻ — повернуть</p>
+            <button id="welcome-start" class="btn-primary big">
+                Начать работу →
+            </button>
+            <p class="welcome-hint">💡 Совет: перетаскивайте мебель по сетке с шагом 0.5 м</p>
         </div>
+    </div>
 
-        <div class="room-wrapper">
-            <div id="room" class="room"></div>
+    <!-- ===== ШАПКА ===== -->
+    <header class="topbar">
+        <div class="brand">
+            <span class="brand-icon">🏛</span>
+            <span class="brand-name">Планировщик квартиры</span>
         </div>
+        <div class="topbar-actions">
+            <button id="view-2d" class="view-btn active">📐 2D-план</button>
+            <button id="view-3d" class="view-btn">🎨 3D-вид</button>
+            <div class="visits-badge">
+                👣 <span id="visits-count">1</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== ОСНОВНОЙ ЭКРАН ===== -->
+    <div class="app">
+
+        <!-- ЛЕВАЯ ПАНЕЛЬ -->
+        <aside class="toolbox">
+
+            <section class="panel">
+                <h3>📐 Комната</h3>
+                <label>Ширина (м): <input id="room-w" type="number" value="6" min="2" max="10" step="0.5"></label>
+                <label>Длина (м):  <input id="room-h" type="number" value="5" min="2" max="10" step="0.5"></label>
+                <label>Высота потолка (м): <input id="room-h2" type="number" value="2.7" min="2.2" max="4" step="0.1"></label>
+                <button id="apply-room" class="btn-primary">Применить</button>
+            </section>
+
+            <section class="panel">
+                <h3>🚪 Проёмы</h3>
+                <p class="panel-hint">Кликните инструмент, затем по стене комнаты</p>
+                <div class="btn-grid">
+                    <button class="tool-btn door" data-mode="door">🚪 Дверь</button>
+                    <button class="tool-btn window" data-mode="window">🪟 Окно</button>
+                </div>
+                <label>Ширина проёма (м): <input id="opening-width" type="number" value="0.9" min="0.6" max="2.5" step="0.1"></label>
+                <label>Открывание:
+                    <select id="opening-side">
+                        <option value="in">Внутрь</option>
+                        <option value="out">Наружу</option>
+                    </select>
+                </label>
+            </section>
+
+            <section class="panel">
+                <h3>🛋 Мебель</h3>
+                <div class="btn-grid">
+                    <button class="tool-btn" data-type="sofa">🛋 Диван</button>
+                    <button class="tool-btn" data-type="armchair">💺 Кресло</button>
+                    <button class="tool-btn" data-type="chair">🪑 Стул</button>
+                    <button class="tool-btn" data-type="table">🟫 Стол</button>
+                    <button class="tool-btn" data-type="table_round">⭕ Круглый</button>
+                    <button class="tool-btn" data-type="wardrobe">🚪 Шкаф</button>
+                    <button class="tool-btn" data-type="bed">🛏 Кровать</button>
+                    <button class="tool-btn" data-type="bed_single">🛏 1-спал</button>
+                    <button class="tool-btn" data-type="lamp">💡 Торшер</button>
+                    <button class="tool-btn" data-type="plant">🌿 Растение</button>
+                    <button class="tool-btn" data-type="tv">📺 ТВ</button>
+                    <button class="tool-btn" data-type="bookshelf">📚 Полка</button>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h3>➕ Своя мебель</h3>
+                <input id="f-name" type="text" placeholder="Название" maxlength="14">
+                <label>Форма:
+                    <select id="f-shape">
+                        <option value="rect">Прямоугольник</option>
+                        <option value="rounded">Скругление</option>
+                        <option value="round">Круг</option>
+                        <option value="oval">Овал</option>
+                    </select>
+                </label>
+                <label>Ширина (м): <input id="f-w" type="number" value="1" min="0.5" max="5" step="0.5"></label>
+                <label>Глубина (м): <input id="f-h" type="number" value="1" min="0.5" max="5" step="0.5"></label>
+                <button id="add-custom" class="btn-primary">Добавить</button>
+            </section>
+
+            <section class="panel">
+                <h3>🏛 Инструменты</h3>
+                <button id="btn-balcony" class="btn-arch">🏠 Балкон</button>
+                <button id="btn-ergo" class="btn-arch">📏 Эргономика</button>
+                <button id="btn-photo" class="btn-arch">📷 Замер по фото</button>
+            </section>
+
+            <section class="panel">
+                <h3>💾 Действия</h3>
+                <button id="save-png" class="btn-save">📸 Сохранить PNG</button>
+                <button id="clear-btn" class="btn-danger">🗑 Очистить всё</button>
+            </section>
+
+        </aside>
+
+        <!-- ОБЛАСТЬ ПРОСМОТРА -->
+        <main class="viewport">
+            <div id="view-2d-container" class="view-container active">
+                <div id="room" class="room"></div>
+            </div>
+            <div id="view-3d-container" class="view-container">
+                <canvas id="canvas3d"></canvas>
+                <div class="view-3d-hint">🖱 Вращайте: ЛКМ • Приближайте: колесо • Сдвигайте: ПКМ</div>
+            </div>
+        </main>
+
     </div>
 
     <!-- ===== МОДАЛКА: БАЛКОН ===== -->
     <div id="balcony-modal" class="modal hidden">
         <div class="modal-content">
             <h3>🏠 Пристроить балкон</h3>
-            <p class="hint">Балкон пристраивается к одной из стен комнаты</p>
             <label>Сторона:
                 <select id="balcony-side">
                     <option value="top">Сверху</option>
                     <option value="bottom">Снизу</option>
-                    <option value="left">Слева</option>
-                    <option value="right">Справа</option>
+                    <option value="left">Слева</option><option value="right">Справа</option>
                 </select>
             </label>
             <label>Глубина (м): <input id="balcony-depth" type="number" value="1.5" min="0.8" max="3" step="0.1"></label>
             <label>Ширина проёма (м): <input id="balcony-opening" type="number" value="1" min="0.6" max="3" step="0.1"></label>
-            <button id="balcony-apply" class="apply-btn">Пристроить</button>
-            <button id="balcony-remove" class="apply-btn danger">Удалить балкон</button>
-            <button id="balcony-close" class="apply-btn gray">Отмена</button>
+            <button id="balcony-apply" class="btn-primary">Пристроить</button>
+            <button id="balcony-remove" class="btn-danger">Удалить балкон</button>
+            <button id="balcony-close" class="btn-gray">Отмена</button>
         </div>
     </div>
 
-    <!-- ===== МОДАЛКА: ЗАМЕР ПО ФОТО ===== -->
+    <!-- ===== МОДАЛКА: ФОТО ===== -->
     <div id="photo-modal" class="modal hidden">
         <div class="modal-content wide">
             <h3>📷 Замер комнаты по фото</h3>
-            <p class="hint">1) Загрузите фото<br>2) Кликните 2 точки на известном отрезке<br>3) Введите реальное расстояние</p>
+            <p class="panel-hint">1) Загрузите фото · 2) Кликните 2 точки на известном отрезке · 3) Введите реальное расстояние</p>
             <input type="file" id="photo-input" accept="image/*">
             <div id="photo-container" class="photo-container">
                 <img id="photo-img" src="" alt="">
@@ -111,15 +199,23 @@
                 <label id="photo-dist-label" class="hidden">
                     Расстояние (м): <input id="photo-dist" type="number" value="1" step="0.1" min="0.1">
                 </label>
-                <button id="photo-apply" class="apply-btn hidden">Применить масштаб</button>
-                <button id="photo-reset" class="apply-btn gray">Сбросить</button>
-                <button id="photo-close" class="apply-btn danger">Закрыть</button>
+                <button id="photo-apply" class="btn-primary hidden">Применить</button>
+                <button id="photo-reset" class="btn-gray">Сбросить</button>
+                <button id="photo-close" class="btn-danger">Закрыть</button>
             </div>
             <div class="photo-info" id="photo-info"></div>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="script.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>
