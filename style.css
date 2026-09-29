@@ -1,3 +1,5 @@
+* { box-sizing: border-box; }
+
 body {
     font-family: Arial, sans-serif;
     background: #f4f6f8;
@@ -10,6 +12,20 @@ body {
 h1 { font-size: 28px; margin-bottom: 5px; }
 p { color: #555; font-size: 15px; margin-bottom: 20px; }
 
+/* СЧЁТЧИК ПОСЕЩЕНИЙ */
+.visits-badge {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: white;
+    padding: 8px 14px;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    font-size: 13px;
+    color: #555;
+    z-index: 500;
+}
+
 .app {
     display: flex;
     justify-content: center;
@@ -18,26 +34,25 @@ p { color: #555; font-size: 15px; margin-bottom: 20px; }
     flex-wrap: wrap;
 }
 
+/* ПАНЕЛЬ */
 .toolbox {
     background: white;
-    padding: 20px;
+    padding: 18px;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    width: 260px;
+    gap: 8px;
+    width: 290px;
     text-align: left;
+    max-height: 88vh;
+    overflow-y: auto;
 }
 
-.toolbox h3 {
-    margin: 5px 0;
-    font-size: 16px;
-    color: #2c3e50;
-}
+.toolbox h3 { margin: 6px 0; font-size: 15px; color: #2c3e50; }
 
 .toolbox label {
-    font-size: 14px;
+    font-size: 13px;
     color: #555;
     display: flex;
     justify-content: space-between;
@@ -46,58 +61,108 @@ p { color: #555; font-size: 15px; margin-bottom: 20px; }
 }
 
 .toolbox input[type="number"],
-.toolbox input[type="text"] {
-    width: 80px;
-    padding: 8px;
+.toolbox input[type="text"],
+.toolbox select {
+    padding: 7px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    font-size: 16px;
-    text-align: center;
+    font-size: 15px;
+    background: white;
 }
 
-.toolbox input[type="text"] {
-    width: 100%;
-    box-sizing: border-box;
-    text-align: left;
+.toolbox input[type="number"] { width: 75px; text-align: center; }
+.toolbox input[type="text"] { width: 100%; }
+.toolbox select { width: 140px; padding: 6px; }
+
+.toolbox hr { border: none; border-top: 1px solid #eee; margin: 6px 0; }
+
+.btn-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
 }
 
-.toolbox hr {
-    border: none;
-    border-top: 1px solid #eee;
-    margin: 8px 0;
-}
-
-.hint {
-    font-size: 13px;
-    color: #999;
-    margin: 0;
-    text-align: center;
-    padding: 5px;
-}
-
-.tool-btn,
-.apply-btn,
-#clear-btn {
-    padding: 12px;
+.tool-btn {
+    padding: 9px 6px;
     cursor: pointer;
+    background: #4a90e2;
     color: white;
     border: none;
     border-radius: 6px;
-    font-size: 15px;
+    font-size: 13px;
     font-weight: bold;
     touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
 }
-
-.tool-btn { background: #4a90e2; text-align: left; }
 .tool-btn:hover { background: #357abd; }
 
-.apply-btn { background: #27ae60; }
+.apply-btn {
+    padding: 10px;
+    cursor: pointer;
+    background: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    touch-action: manipulation;
+    margin-top: 5px;
+}
 .apply-btn:hover { background: #219150; }
+.apply-btn.gray { background: #95a5a6; }
+.apply-btn.gray:hover { background: #7f8c8d; }
+.apply-btn.danger { background: #e74c3c; }
+.apply-btn.danger:hover { background: #c0392b; }
 
-#clear-btn { background: #e74c3c; }
+.arch-btn {
+    padding: 10px;
+    cursor: pointer;
+    background: #8e44ad;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: bold;
+    text-align: left;
+    touch-action: manipulation;
+}
+.arch-btn:hover { background: #71368a; }
+
+.save-btn {
+    padding: 10px;
+    cursor: pointer;
+    background: #2980b9;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    touch-action: manipulation;
+}
+.save-btn:hover { background: #1f618d; }
+
+#clear-btn {
+    padding: 10px;
+    cursor: pointer;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    touch-action: manipulation;
+}
 #clear-btn:hover { background: #c0392b; }
 
+.hint {
+    font-size: 12px;
+    color: #888;
+    margin: 5px 0 0 0;
+    text-align: center;
+    line-height: 1.4;
+}
+
+/* КОМНАТА */
 .room-wrapper {
     background: white;
     padding: 10px;
@@ -114,57 +179,119 @@ p { color: #555; font-size: 15px; margin-bottom: 20px; }
     border: 3px solid #2c3e50;
     background-color: #fafafa;
     background-image:
-        linear-gradient(#e0e0e0 1px, transparent 1px),
-        linear-gradient(90deg, #e0e0e0 1px, transparent 1px);
+        linear-gradient(#e8e8e8 1px, transparent 1px),
+        linear-gradient(90deg, #e8e8e8 1px, transparent 1px);
     background-size: 50px 50px;
     overflow: hidden;
 }
 
+/* Зона балкона */
+.balcony-zone {
+    position: absolute;
+    background: repeating-linear-gradient(
+        45deg,
+        rgba(189, 195, 199, 0.5),
+        rgba(189, 195, 199, 0.5) 8px,
+        rgba(149, 165, 166, 0.4) 8px,
+        rgba(149, 165, 166, 0.4) 16px
+    );
+    border: 2px dashed #7f8c8d;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.balcony-zone .balcony-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #2c3e50;
+    font-size: 13px;
+    font-weight: bold;
+    font-style: italic;
+    background: rgba(255,255,255,0.75);
+    padding: 3px 10px;
+    border-radius: 4px;
+}
+
+/* Проём между комнатой и балконом */
+.balcony-zone .opening {
+    position: absolute;
+    background: #fafafa;
+    border: none;
+}
+
+/* ПРЕДМЕТ МЕБЕЛИ */
 .furniture {
     position: absolute;
     border: 2px solid #2c3e50;
     border-radius: 4px;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     color: white;
     font-weight: bold;
-    font-size: 12px;
+    font-size: 11px;
     cursor: grab;
     user-select: none;
-    box-sizing: border-box;
-    padding: 4px 36px 4px 6px;
+    padding: 2px;
     text-align: center;
     overflow: hidden;
+    z-index: 3;
 }
 
-.furniture-label {
+.furniture-name {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    width: 100%;
+    max-width: 100%;
+    line-height: 1.1;
 }
+
+.furniture-size {
+    font-size: 9px;
+    opacity: 0.9;
+    margin-top: 2px;
+    font-weight: normal;
+    line-height: 1;
+}
+
+.furniture.shape-rounded { border-radius: 18px; }
+.furniture.shape-round   { border-radius: 50%; }
+.furniture.shape-oval    { border-radius: 50%; }
 
 .furniture:active { cursor: grabbing; }
 .furniture.dragging {
     opacity: 0.85;
-    box-shadow: 0 0 15px rgba(241, 196, 15, 0.9);
+    box-shadow: 0 0 18px rgba(241, 196, 15, 0.95);
     z-index: 100;
 }
 
-/* БОЛЬШАЯ кнопка поворота */
-.rotate-btn {
+/* Подсветка нарушений эргономики */
+.furniture.ergo-warning {
+    outline: 3px solid #e74c3c;
+    outline-offset: 2px;
+    animation: pulse 1.2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { outline-color: #e74c3c; }
+    50%      { outline-color: #ff8a80; }
+}
+
+/* Кнопки управления на предмете */
+.furniture .rotate-btn,
+.furniture .delete-btn {
     position: absolute;
-    top: 3px;
-    right: 3px;
-    width: 30px;
-    height: 30px;
-    background: #f39c12;
-    color: white;
-    border: 2px solid white;
+    top: 2px;
+    width: 22px;
+    height: 22px;
+    border: 1.5px solid white;
     border-radius: 50%;
-    font-size: 18px;
+    color: white;
     font-weight: bold;
+    font-size: 14px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -172,42 +299,146 @@ p { color: #555; font-size: 15px; margin-bottom: 20px; }
     padding: 0;
     line-height: 1;
     z-index: 10;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
     touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
 }
 
-.rotate-btn:hover { background: #e67e22; }
+.furniture .rotate-btn { right: 2px; background: #f39c12; }
+.furniture .delete-btn { left: 2px; background: #e74c3c; font-size: 12px; }
 
-/* Мобильная версия */
-@media (max-width: 600px) {
+/* МОДАЛЬНЫЕ ОКНА */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 15px;
+}
+
+.modal.hidden { display: none; }
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 22px;
+    max-width: 400px;
+    width: 100%;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 92vh;
+    overflow-y: auto;
+}
+
+.modal-content.wide { max-width: 700px; }
+
+.modal-content h3 { margin: 0 0 5px 0; font-size: 18px; }
+
+.modal-content label {
+    font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.modal-content input[type="number"],
+.modal-content select {
+    padding: 7px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 15px;
+}
+
+/* ФОТО */
+.photo-container {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    border: 2px solid #ccc;
+    border-radius: 6px;
+    background: #f0f0f0;
+    min-height: 180px;
+    user-select: none;
+    cursor: crosshair;
+}
+
+.photo-container img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+.photo-grid {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+        linear-gradient(rgba(39, 174, 96, 0.55) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(39, 174, 96, 0.55) 1px, transparent 1px);background-size: 100px 100px;
+    display: none;
+}
+
+.photo-grid.visible { display: block; }
+
+.photo-point {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: #e74c3c;
+    border: 2px solid white;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    display: none;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    z-index: 5;
+}
+
+.photo-point.visible { display: block; }
+
+.photo-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.photo-controls .apply-btn { margin-top: 0; }
+
+.photo-info {
+    font-size: 13px;
+    color: #555;
+    padding: 8px;
+    background: #f4f6f8;
+    border-radius: 6px;
+    min-height: 20px;
+}
+
+.hidden { display: none !important; }
+
+/* МОБИЛЬНАЯ ВЕРСИЯ */
+@media (max-width: 640px) {
     body { padding: 10px; }
     h1 { font-size: 22px; }
-    p { font-size: 14px; }
 
-    .app {
-        flex-direction: column;
-        align-items: center;
-        gap: 15px;
-    }
+    .visits-badge { font-size: 11px; padding: 6px 10px; top: 6px; right: 6px; }
+
+    .app { flex-direction: column; align-items: center; gap: 12px; }
 
     .toolbox {
         width: 100%;
-        max-width: 340px;
-        box-sizing: border-box;
+        max-width: 380px;
+        max-height: none;
     }
 
-    .room-wrapper {
-        width: 100%;
-        overflow-x: auto;
-        box-sizing: border-box;
-    }.rotate-btn {
-        width: 38px;
-        height: 38px;
-        font-size: 20px;
-    }
+    .room-wrapper { width: 100%; overflow-x: auto; }
 
-    .furniture {
-        padding: 4px 46px 4px 6px;
-    }
+    .furniture .rotate-btn,
+    .furniture .delete-btn { width: 26px; height: 26px; font-size: 15px; }
 }
