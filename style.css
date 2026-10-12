@@ -841,6 +841,76 @@ body {
 .furniture.shape-oval .furniture-size {
     padding: 0 22px;
 }
+/* ===== ЗАМЕР ПО ФОТО — ШАГИ ===== */
+.photo-step {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px;
+    background: var(--gray-100);
+    border-left: 2px solid var(--black);
+    margin-bottom: 8px;
+}
+
+.photo-step-num {
+    width: 22px;
+    height: 22px;
+    background: var(--black);
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: bold;
+    flex-shrink: 0;
+    border-radius: 50%;
+}
+
+.photo-step-text {
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--gray-600);
+}
+
+.photo-step-text strong {
+    color: var(--black);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 10px;
+}
+
+.photo-mode {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: var(--border-light);
+    margin-bottom: 8px;
+}
+
+.mode-btn {
+    padding: 10px;
+    background: var(--white);
+    border: none;
+    border-right: var(--border-light);
+    font-size: 11px;
+    font-family: inherit;
+    cursor: pointer;
+    color: var(--gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    transition: 0.15s;
+}
+
+.mode-btn:last-child { border-right: none; }
+
+.mode-btn.active {
+    background: var(--black);
+    color: var(--white);
+}
+
+.mode-btn:hover:not(.active) {
+    background: var(--gray-100);
+}
 
 
 
