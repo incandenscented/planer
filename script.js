@@ -19,13 +19,9 @@ const wb = document.getElementById('welcome-start');
 if (wb) {
     wb.addEventListener('click', function(){
         document.getElementById('welcome-modal').classList.add('hidden');
+        try{localStorage.setItem('planner-welcomed','1');}catch(e){}
     });
 }
-// Показываем приветствие всегда (можно убрать эту строку если нужно 1 раз)
-// Если хотите показывать только 1 раз — раскомментируйте:
-// if (localStorage.getItem('planner-welcomed')==='1') {
-//     document.getElementById('welcome-modal').classList.add('hidden');
-// }
 
 // Размер комнаты
 function updateRoom(){
@@ -37,7 +33,7 @@ function applyRoom(){
     let w = parseFloat(document.getElementById('room-w').value);
     let h = parseFloat(document.getElementById('room-h').value);
     if (isNaN(w)||w<2) w=2; if (isNaN(h)||h<2) h=2;
-    if (w>10) w=10; if (h>10) h=10;
+    if (w>15) w=15; if (h>15) h=15;
     roomW=w; roomH=h;
     document.getElementById('room-w').value=w;
     document.getElementById('room-h').value=h;
@@ -237,18 +233,29 @@ function drag(el){
     el.addEventListener('touchstart',start,{passive:false});
 }
 
-// ЗАМЕР ПО ФОТО
+// ============================================================
+//   ЗАМЕР ПО ФОТО — с переносом размеров в план
+// ============================================================
+
 const pm = document.getElementById('photo-modal');
 const pi = document.getElementById('photo-input');
 const pimg = document.getElementById('photo-img');
 const pg = document.getElementById('photo-grid');
 const pc = document.getElementById('photo-container');
 const p1 = document.getElementById('pt1'), p2 = document.getElementById('pt2');
+const p3 = document.getElementById('pt3'), p4 = document.getElementById('pt4');
 const pinfo = document.getElementById('photo-info');
 const pdl = document.getElementById('photo-dist-label');
 const pd = document.getElementById('photo-dist');
 const pa = document.getElementById('photo-apply');
-let pp = [], pixDist = 0;
+const pwLabel = document.getElementById('photo-width-label');
+const pLen = document.getElementById('photo-length');
+const pToPlan = document.getElementById('photo-to-plan');
+
+let photoMode = 'scale'; // 'scale' | 'width'
+let scalePoints = []; // точки для масштаба
+let widthPoints = []; // точки для ширины
+let pxPerMeter = 0; // пикселей в метре
 
 document.getElementById('btn-photo').addEventListener('click', function(){ pm.classList.remove('hidden'); });
 document.getElementById('photo-close').addEventListener('click', function(){ pm.classList.add('hidden'); });
@@ -257,45 +264,134 @@ pi.addEventListener('change', function(e){
     const f = e.target.files[0];
     if (!f) return;
     pimg.src = URL.createObjectURL(f);
-    pimg.onload = function(){ resetP(); pinfo.textContent='Кликните две точки на известном расстоянии'; };
+    pimg.onload = function(){
+        resetAll();
+        pinfo.textContent = 'Шаг 1: кликните 2 точки на известном отрезке (например, ширина двери)';
+    };
 });
 
-function resetP(){
-    pp=[]; pixDist=0;
-    p1.classList.remove('visible'); p2.classList.remove('visible');
-    pg.classList.remove('visible'); pdl.classList.add('hidden');
-    pa.classList.add('hidden'); pinfo.textContent='';
-}
-document.getElementById('photo-reset').addEventListener('click', resetP);
+// Переключение режимов
+document.querySelectorAll('.mode-btn').forEach(function(b){
+    b.addEventListener('click', function(){
+        if (b.dataset.mode === 'width' && pxPerMeter <= 0) {
+            alert('Сначала задайте масштаб на шаге 1.');
+            return;
+        }
+        photoMode = b.dataset.mode;
+        document.querySelectorAll('.mode-btn').forEach(function(x){ x.classList.remove('active'); });
+        b.classList.add('active');
+        if (photoMode === 'scale') {
+            pinfo.textContent = 'Шаг 1: кликните 2 точки на известном отрезке и введите реальное расстояние';
+        } else {
+            pinfo.textContent = 'Шаг 2: кликните 2 точки на углах комнаты (ширина задней стены)';
+        }
+    });
+});
 
+function resetAll(){
+    scalePoints = []; widthPoints = []; pxPerMeter = 0;
+    [p1,p2,p3,p4].forEach(function(p){ p.classList.remove('visible'); });
+    pg.classList.remove('visible');
+    pdl.classList.add('hidden'); pa.classList.add('hidden');
+    pwLabel.classList.add('hidden'); pToPlan.classList.add('hidden');
+    pinfo.textContent = '';
+    document.querySelectorAll('.mode-btn').forEach(function(x){
+        x.classList.toggle('active', x.dataset.mode === 'scale');
+    });
+    photoMode = 'scale';
+}
+document.getElementById('photo-reset').addEventListener('click', resetAll);
+
+// Клик по фото
 pc.addEventListener('click', function(e){
     if (!pimg.src) return;
     const r = pc.getBoundingClientRect();
-    const x = e.clientX-r.left+pc.scrollLeft;
-    const y = e.clientY-r.top+pc.scrollTop;
-    if (pp.length>=2) resetP();
-    pp.push({x:x,y:y});
-    if (pp.length===1){
-        p1.style.left=x+'px'; p1.style.top=y+'px';
-        p1.classList.add('visible');
-        pinfo.textContent='Точка 1. Кликните вторую.';
-    } else if (pp.length===2){
-        p2.style.left=x+'px'; p2.style.top=y+'px';
-        p2.classList.add('visible');
-        pixDist = Math.hypot(pp[1].x-pp[0].x, pp[1].y-pp[0].y);
-        pinfo.textContent='Расстояние: '+Math.round(pixDist)+' px. Укажите длину.';
-        pdl.classList.remove('hidden'); pa.classList.remove('hidden');
+    const x = e.clientX - r.left + pc.scrollLeft;
+    const y = e.clientY - r.top + pc.scrollTop;
+
+    if (photoMode === 'scale') {
+        // Шаг 1: масштаб
+        if (scalePoints.length >= 2) {
+            scalePoints = [];
+            p1.classList.remove('visible'); p2.classList.remove('visible');
+            pdl.classList.add('hidden'); pa.classList.add('hidden');
+        }
+        scalePoints.push({x:x, y:y});
+
+        if (scalePoints.length === 1) {
+            p1.style.left = x+'px'; p1.style.top = y+'px';
+            p1.classList.add('visible');
+            pinfo.textContent = 'Точка 1. Кликните вторую точку на том же отрезке.';
+        } else {
+            p2.style.left = x+'px'; p2.style.top = y+'px';
+            p2.classList.add('visible');
+            const d = Math.hypot(scalePoints[1].x-scalePoints[0].x, scalePoints[1].y-scalePoints[0].y);
+            pinfo.textContent = 'Расстояние: ' + Math.round(d) + ' px. Введите реальную длину отрезка.';
+            pdl.classList.remove('hidden'); pa.classList.remove('hidden');
+        }
+    } else {
+        // Шаг 2: ширина комнаты
+        if (widthPoints.length >= 2) {
+            widthPoints = [];
+            p3.classList.remove('visible'); p4.classList.remove('visible');
+            pwLabel.classList.add('hidden'); pToPlan.classList.add('hidden');
+        }
+        widthPoints.push({x:x, y:y});
+
+        if (widthPoints.length === 1) {
+            p3.style.left = x+'px'; p3.style.top = y+'px';
+            p3.classList.add('visible');
+            pinfo.textContent = 'Угол 1. Кликните второй угол комнаты.';
+        } else {
+            p4.style.left = x+'px'; p4.style.top = y+'px';
+            p4.classList.add('visible');
+            const d = Math.hypot(widthPoints[1].x-widthPoints[0].x, widthPoints[1].y-widthPoints[0].y);
+            const widthMeters = (d / pxPerMeter).toFixed(1);
+            pinfo.textContent = 'Ширина комнаты ≈ ' + widthMeters + ' м. Теперь укажите длину.';
+            pwLabel.classList.remove('hidden'); pToPlan.classList.remove('hidden');
+        }
     }
 });
 
+// Сохранить масштаб
 pa.addEventListener('click', function(){
     const m = parseFloat(pd.value);
-    if (isNaN(m)||m<=0){ alert('Введите расстояние.'); return; }
-    if (pixDist<=0) return;
-    const ppm = pixDist/m;
+    if (isNaN(m)||m<=0){ alert('Введите корректное расстояние.'); return; }
+    if (scalePoints.length < 2) return;
+    const d = Math.hypot(scalePoints[1].x-scalePoints[0].x, scalePoints[1].y-scalePoints[0].y);
+    pxPerMeter = d / m;
     pg.classList.add('visible');
-    pg.style.backgroundSize = ppm+'px '+ppm+'px';
-    pinfo.textContent = 'Масштаб: 1 м = '+Math.round(ppm)+' px';
+    pg.style.backgroundSize = pxPerMeter+'px '+pxPerMeter+'px';
+    pinfo.textContent = 'Масштаб сохранён: 1 м = '+Math.round(pxPerMeter)+' px.\nТеперь переключитесь на шаг «2️⃣ Ширина комнаты» и отметьте 2 угла.';
+});
+
+// Перенести в план
+pToPlan.addEventListener('click', function(){
+    if (widthPoints.length < 2){ alert('Отметьте 2 угла комнаты.'); return; }
+    const d = Math.hypot(widthPoints[1].x-widthPoints[0].x, widthPoints[1].y-widthPoints[0].y);
+    let widthMeters = d / pxPerMeter;
+    let lengthMeters = parseFloat(pLen.value);
+
+    if (isNaN(lengthMeters)||lengthMeters<1) lengthMeters=4;
+    if (widthMeters < 2) widthMeters = 2;
+    if (widthMeters > 15) widthMeters = 15;
+    if (lengthMeters > 15) lengthMeters = 15;
+
+    // Округляем до 0.1 м
+    widthMeters = Math.round(widthMeters*10)/10;
+    lengthMeters = Math.round(lengthMeters*10)/10;
+
+    // Переносим в поля комнаты
+    document.getElementById('room-w').value = widthMeters;
+    document.getElementById('room-h').value = lengthMeters;
+
+    // Применяем
+    applyRoom();
+
+    // Уведомление
+    alert('✅ Размеры перенесены в план!\n\nШирина: ' + widthMeters + ' м\nДлина: ' + lengthMeters + ' м\n\nТочность зависит от качества фото.');
+
+    pm.classList.add('hidden');
 });
 
 // PNG
@@ -353,5 +449,6 @@ function load(){
     }catch(e){ return false; }
 }
 if (!load()) updateRoom();
+
 
 
