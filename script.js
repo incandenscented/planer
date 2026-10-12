@@ -14,6 +14,19 @@ const COLORS = ['#f97316','#14b8a6','#ef4444','#8b5cf6','#3b82f6','#22c55e','#92
     if (e) e.textContent = v;
 })();
 
+// Приветствие
+const wb = document.getElementById('welcome-start');
+if (wb) {
+    wb.addEventListener('click', function(){
+        document.getElementById('welcome-modal').classList.add('hidden');
+    });
+}
+// Показываем приветствие всегда (можно убрать эту строку если нужно 1 раз)
+// Если хотите показывать только 1 раз — раскомментируйте:
+// if (localStorage.getItem('planner-welcomed')==='1') {
+//     document.getElementById('welcome-modal').classList.add('hidden');
+// }
+
 // Размер комнаты
 function updateRoom(){
     room.style.width = (roomW*SCALE)+'px';
@@ -224,6 +237,67 @@ function drag(el){
     el.addEventListener('touchstart',start,{passive:false});
 }
 
+// ЗАМЕР ПО ФОТО
+const pm = document.getElementById('photo-modal');
+const pi = document.getElementById('photo-input');
+const pimg = document.getElementById('photo-img');
+const pg = document.getElementById('photo-grid');
+const pc = document.getElementById('photo-container');
+const p1 = document.getElementById('pt1'), p2 = document.getElementById('pt2');
+const pinfo = document.getElementById('photo-info');
+const pdl = document.getElementById('photo-dist-label');
+const pd = document.getElementById('photo-dist');
+const pa = document.getElementById('photo-apply');
+let pp = [], pixDist = 0;
+
+document.getElementById('btn-photo').addEventListener('click', function(){ pm.classList.remove('hidden'); });
+document.getElementById('photo-close').addEventListener('click', function(){ pm.classList.add('hidden'); });
+
+pi.addEventListener('change', function(e){
+    const f = e.target.files[0];
+    if (!f) return;
+    pimg.src = URL.createObjectURL(f);
+    pimg.onload = function(){ resetP(); pinfo.textContent='Кликните две точки на известном расстоянии'; };
+});
+
+function resetP(){
+    pp=[]; pixDist=0;
+    p1.classList.remove('visible'); p2.classList.remove('visible');
+    pg.classList.remove('visible'); pdl.classList.add('hidden');
+    pa.classList.add('hidden'); pinfo.textContent='';
+}
+document.getElementById('photo-reset').addEventListener('click', resetP);
+
+pc.addEventListener('click', function(e){
+    if (!pimg.src) return;
+    const r = pc.getBoundingClientRect();
+    const x = e.clientX-r.left+pc.scrollLeft;
+    const y = e.clientY-r.top+pc.scrollTop;
+    if (pp.length>=2) resetP();
+    pp.push({x:x,y:y});
+    if (pp.length===1){
+        p1.style.left=x+'px'; p1.style.top=y+'px';
+        p1.classList.add('visible');
+        pinfo.textContent='Точка 1. Кликните вторую.';
+    } else if (pp.length===2){
+        p2.style.left=x+'px'; p2.style.top=y+'px';
+        p2.classList.add('visible');
+        pixDist = Math.hypot(pp[1].x-pp[0].x, pp[1].y-pp[0].y);
+        pinfo.textContent='Расстояние: '+Math.round(pixDist)+' px. Укажите длину.';
+        pdl.classList.remove('hidden'); pa.classList.remove('hidden');
+    }
+});
+
+pa.addEventListener('click', function(){
+    const m = parseFloat(pd.value);
+    if (isNaN(m)||m<=0){ alert('Введите расстояние.'); return; }
+    if (pixDist<=0) return;
+    const ppm = pixDist/m;
+    pg.classList.add('visible');
+    pg.style.backgroundSize = ppm+'px '+ppm+'px';
+    pinfo.textContent = 'Масштаб: 1 м = '+Math.round(ppm)+' px';
+});
+
 // PNG
 document.getElementById('save-png').addEventListener('click', function(){
     const btns = document.querySelectorAll('.rotate-btn, .delete-btn');
@@ -279,6 +353,5 @@ function load(){
     }catch(e){ return false; }
 }
 if (!load()) updateRoom();
-
 
 
