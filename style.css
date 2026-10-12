@@ -819,6 +819,28 @@ body {
     .furniture .rotate-btn,
     .furniture .delete-btn { width: 24px; height: 24px; font-size: 13px; }
 }
+/* Кнопки для круглых и овальных форм — сдвигаем внутрь, чтобы не вылезали за края */
+.furniture.shape-round .rotate-btn,
+.furniture.shape-oval .rotate-btn {
+    right: 10%;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.furniture.shape-round .delete-btn,
+.furniture.shape-oval .delete-btn {
+    left: 10%;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* У овалов и кругов текст по центру, сжимаем, чтобы не задевал кнопки */
+.furniture.shape-round .furniture-name,
+.furniture.shape-round .furniture-size,
+.furniture.shape-oval .furniture-name,
+.furniture.shape-oval .furniture-size {
+    padding: 0 22px;
+}
 
 
 
