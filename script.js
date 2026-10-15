@@ -19,7 +19,6 @@ const wb = document.getElementById('welcome-start');
 if (wb) {
     wb.addEventListener('click', function(){
         document.getElementById('welcome-modal').classList.add('hidden');
-        try{localStorage.setItem('planner-welcomed','1');}catch(e){}
     });
 }
 
@@ -28,6 +27,7 @@ function updateRoom(){
     room.style.width = (roomW*SCALE)+'px';
     room.style.height = (roomH*SCALE)+'px';
     renderOpenings();
+    updateStats();
 }
 function applyRoom(){
     let w = parseFloat(document.getElementById('room-w').value);
@@ -40,6 +40,7 @@ function applyRoom(){
     updateRoom();
     room.querySelectorAll('.furniture').forEach(clamp);
     save();
+    updateStats();
 }
 document.getElementById('apply-room').addEventListener('click', applyRoom);
 
@@ -147,14 +148,20 @@ function createEl(name, w, h, color, shape, left, top){
     n.className='furniture-name'; n.textContent=name;
     el.appendChild(n);
     const s = document.createElement('span');
-    s.className='furniture-size'; s.textContent=w+'×'+h+' м';
+    s.className='furniture-size';
+    s.textContent = w + '×' + h + ' м · ' + (w*h).toFixed(1) + ' м²';
     el.appendChild(s);
 
     const d = document.createElement('button');
     d.className='delete-btn'; d.textContent='✕';
     d.addEventListener('mousedown', function(e){e.stopPropagation();});
     d.addEventListener('touchstart', function(e){e.stopPropagation();},{passive:true});
-    d.addEventListener('click', function(e){e.stopPropagation();e.preventDefault();el.remove();save();});
+    d.addEventListener('click', function(e){
+        e.stopPropagation();e.preventDefault();
+        el.remove();
+        save();
+        updateStats();
+    });
     el.appendChild(d);
 
     const r = document.createElement('button');
@@ -181,6 +188,7 @@ document.getElementById('add-custom').addEventListener('click', function(){
     room.appendChild(createEl(name,w,h,c,shape,p.x,p.y));
     document.getElementById('f-name').value='';
     save();
+    updateStats();
 });
 
 function rotate(el){
@@ -188,8 +196,9 @@ function rotate(el){
     el.dataset.w=oh; el.dataset.h=ow;
     el.style.width=(oh*SCALE)+'px'; el.style.height=(ow*SCALE)+'px';
     const s = el.querySelector('.furniture-size');
-    if (s) s.textContent = oh+'×'+ow+' м';
+    if (s) s.textContent = oh+'×'+ow+' м · ' + (oh*ow).toFixed(1) + ' м²';
     clamp(el); save();
+    updateStats();
 }
 
 function drag(el){
@@ -228,34 +237,65 @@ function drag(el){
         document.removeEventListener('touchend',end);
         document.removeEventListener('touchcancel',end);
         save();
+        updateStats();
     }
     el.addEventListener('mousedown',start);
     el.addEventListener('touchstart',start,{passive:false});
 }
 
 // ============================================================
-//   ЗАМЕР ПО ФОТО — с переносом размеров в план
+//   ПОДСЧЁТ ПЛОЩАДИ
 // ============================================================
+function updateStats(){
+    const statsEl = document.getElementById('room-stats');
+    if (!statsEl) return;
 
+    const roomArea = roomW * roomH;
+    let furnitureArea = 0;
+
+    room.querySelectorAll('.furniture').forEach(function(el){
+        const w = parseFloat(el.dataset.w) || 0;
+        const h = parseFloat(el.dataset.h) || 0;
+        furnitureArea += w * h;
+    });
+
+    const freeArea = Math.max(0, roomArea - furnitureArea);
+    const occupiedPercent = roomArea > 0 ? Math.round((furnitureArea / roomArea) * 100) : 0;
+    const freePercent = 100 - occupiedPercent;
+
+    statsEl.innerHTML =
+        '<span class="stat-item">📐 Комната: <strong>' + roomArea.toFixed(1) + ' м²</strong></span>' +
+        '<span class="stat-sep">|</span>' +
+        '<span class="stat-item">🛋 Занято: <strong>' + furnitureArea.toFixed(1) + ' м²</strong> (' + occupiedPercent + '%)</span>' +
+        '<span class="stat-sep">|</span>' +
+        '<span class="stat-item">⬜ Свободно: <strong>' + freeArea.toFixed(1) + ' м²</strong> (' + freePercent + '%)</span>';
+}
+
+// ============================================================
+//   ЗАМЕР ПО ФОТО
+// ============================================================
 const pm = document.getElementById('photo-modal');
 const pi = document.getElementById('photo-input');
 const pimg = document.getElementById('photo-img');
 const pg = document.getElementById('photo-grid');
 const pc = document.getElementById('photo-container');
-const p1 = document.getElementById('pt1'), p2 = document.getElementById('pt2');
-const p3 = document.getElementById('pt3'), p4 = document.getElementById('pt4');
 const pinfo = document.getElementById('photo-info');
+const phint = document.getElementById('photo-hint');
 const pdl = document.getElementById('photo-dist-label');
 const pd = document.getElementById('photo-dist');
 const pa = document.getElementById('photo-apply');
-const pwLabel = document.getElementById('photo-width-label');
-const pLen = document.getElementById('photo-length');
-const pToPlan = document.getElementById('photo-to-plan');
 
-let photoMode = 'scale'; // 'scale' | 'width'
-let scalePoints = []; // точки для масштаба
-let widthPoints = []; // точки для ширины
-let pxPerMeter = 0; // пикселей в метре
+const points = { scale: [], width: [], length: [] };
+const pointEls = {
+    scale: [document.getElementById('pt1'), document.getElementById('pt2')],
+    width: [document.getElementById('pt3'), document.getElementById('pt4')],
+    length: [document.getElementById('pt5'), document.getElementById('pt6')]
+};
+
+let photoMode = 'scale';
+let pxPerMeter = 0;
+let widthMeters = 0;
+let lengthMeters = 0;
 
 document.getElementById('btn-photo').addEventListener('click', function(){ pm.classList.remove('hidden'); });
 document.getElementById('photo-close').addEventListener('click', function(){ pm.classList.add('hidden'); });
@@ -265,133 +305,136 @@ pi.addEventListener('change', function(e){
     if (!f) return;
     pimg.src = URL.createObjectURL(f);
     pimg.onload = function(){
-        resetAll();
-        pinfo.textContent = 'Шаг 1: кликните 2 точки на известном отрезке (например, ширина двери)';
+        resetPhoto();
+        setMode('scale');
+        phint.textContent = '1️⃣ Кликните 2 точки на известном предмете (например, кровать) и введите его длину';
     };
 });
 
-// Переключение режимов
 document.querySelectorAll('.mode-btn').forEach(function(b){
     b.addEventListener('click', function(){
         if (b.dataset.mode === 'width' && pxPerMeter <= 0) {
             alert('Сначала задайте масштаб на шаге 1.');
             return;
         }
-        photoMode = b.dataset.mode;
-        document.querySelectorAll('.mode-btn').forEach(function(x){ x.classList.remove('active'); });
-        b.classList.add('active');
-        if (photoMode === 'scale') {
-            pinfo.textContent = 'Шаг 1: кликните 2 точки на известном отрезке и введите реальное расстояние';
-        } else {
-            pinfo.textContent = 'Шаг 2: кликните 2 точки на углах комнаты (ширина задней стены)';
+        if (b.dataset.mode === 'length' && pxPerMeter <= 0) {
+            alert('Сначала задайте масштаб на шаге 1.');
+            return;
         }
+        setMode(b.dataset.mode);
     });
 });
 
-function resetAll(){
-    scalePoints = []; widthPoints = []; pxPerMeter = 0;
-    [p1,p2,p3,p4].forEach(function(p){ p.classList.remove('visible'); });
-    pg.classList.remove('visible');
-    pdl.classList.add('hidden'); pa.classList.add('hidden');
-    pwLabel.classList.add('hidden'); pToPlan.classList.add('hidden');
-    pinfo.textContent = '';
+function setMode(m){
+    photoMode = m;
     document.querySelectorAll('.mode-btn').forEach(function(x){
-        x.classList.toggle('active', x.dataset.mode === 'scale');
+        x.classList.toggle('active', x.dataset.mode === m);
     });
-    photoMode = 'scale';
+    if (m === 'scale') {
+        phint.textContent = '1️⃣ Кликните 2 точки на известном предмете и введите его длину';
+    } else if (m === 'width') {
+        phint.textContent = '2️⃣ Кликните 2 угла задней стены (лево и право) — сайт посчитает ширину';
+    } else if (m === 'length') {
+        phint.textContent = '3️⃣ Кликните 2 точки: у ног и у задней стены (по боку) — сайт посчитает длину';
+    }
 }
-document.getElementById('photo-reset').addEventListener('click', resetAll);
 
-// Клик по фото
 pc.addEventListener('click', function(e){
     if (!pimg.src) return;
     const r = pc.getBoundingClientRect();
     const x = e.clientX - r.left + pc.scrollLeft;
     const y = e.clientY - r.top + pc.scrollTop;
 
-    if (photoMode === 'scale') {
-        // Шаг 1: масштаб
-        if (scalePoints.length >= 2) {
-            scalePoints = [];
-            p1.classList.remove('visible'); p2.classList.remove('visible');
-            pdl.classList.add('hidden'); pa.classList.add('hidden');
-        }
-        scalePoints.push({x:x, y:y});
+    const arr = points[photoMode];
+    const els = pointEls[photoMode];
 
-        if (scalePoints.length === 1) {
-            p1.style.left = x+'px'; p1.style.top = y+'px';
-            p1.classList.add('visible');
-            pinfo.textContent = 'Точка 1. Кликните вторую точку на том же отрезке.';
-        } else {
-            p2.style.left = x+'px'; p2.style.top = y+'px';
-            p2.classList.add('visible');
-            const d = Math.hypot(scalePoints[1].x-scalePoints[0].x, scalePoints[1].y-scalePoints[0].y);
-            pinfo.textContent = 'Расстояние: ' + Math.round(d) + ' px. Введите реальную длину отрезка.';
-            pdl.classList.remove('hidden'); pa.classList.remove('hidden');
-        }
+    if (arr.length >= 2) {
+        arr.length = 0;
+        els.forEach(function(el){ el.classList.remove('visible'); });
+        if (photoMode === 'scale') { pdl.classList.add('hidden'); pa.classList.add('hidden'); }
+    }
+
+    arr.push({x:x, y:y});
+
+    if (arr.length === 1) {
+        els[0].style.left = x+'px';
+        els[0].style.top = y+'px';
+        els[0].classList.add('visible');
+        pinfo.textContent = 'Точка 1. Кликните вторую точку.';
     } else {
-        // Шаг 2: ширина комнаты
-        if (widthPoints.length >= 2) {
-            widthPoints = [];
-            p3.classList.remove('visible'); p4.classList.remove('visible');
-            pwLabel.classList.add('hidden'); pToPlan.classList.add('hidden');
-        }
-        widthPoints.push({x:x, y:y});
+        els[1].style.left = x+'px';
+        els[1].style.top = y+'px';
+        els[1].classList.add('visible');
 
-        if (widthPoints.length === 1) {
-            p3.style.left = x+'px'; p3.style.top = y+'px';
-            p3.classList.add('visible');
-            pinfo.textContent = 'Угол 1. Кликните второй угол комнаты.';
-        } else {
-            p4.style.left = x+'px'; p4.style.top = y+'px';
-            p4.classList.add('visible');
-            const d = Math.hypot(widthPoints[1].x-widthPoints[0].x, widthPoints[1].y-widthPoints[0].y);
-            const widthMeters = (d / pxPerMeter).toFixed(1);
-            pinfo.textContent = 'Ширина комнаты ≈ ' + widthMeters + ' м. Теперь укажите длину.';
-            pwLabel.classList.remove('hidden'); pToPlan.classList.remove('hidden');
+        const d = Math.hypot(arr[1].x-arr[0].x, arr[1].y-arr[0].y);
+
+        if (photoMode === 'scale') {
+            pinfo.textContent = 'Расстояние: ' + Math.round(d) + ' px. Введите реальную длину предмета.';
+            pdl.classList.remove('hidden');
+            pa.classList.remove('hidden');
+        } else if (photoMode === 'width' && pxPerMeter > 0) {
+            widthMeters = d / pxPerMeter;
+            pinfo.textContent = 'Ширина комнаты: ≈ ' + widthMeters.toFixed(2) + ' м. Теперь шаг 3 — длина.';
+            setMode('length');
+        } else if (photoMode === 'length' && pxPerMeter > 0) {
+            lengthMeters = d / pxPerMeter;
+            pinfo.textContent = 'Длина комнаты: ≈ ' + lengthMeters.toFixed(2) + ' м. Нажмите «Перенести в план».';
         }
     }
 });
 
-// Сохранить масштаб
 pa.addEventListener('click', function(){
     const m = parseFloat(pd.value);
     if (isNaN(m)||m<=0){ alert('Введите корректное расстояние.'); return; }
-    if (scalePoints.length < 2) return;
-    const d = Math.hypot(scalePoints[1].x-scalePoints[0].x, scalePoints[1].y-scalePoints[0].y);
+    if (points.scale.length < 2) return;
+    const d = Math.hypot(points.scale[1].x-points.scale[0].x, points.scale[1].y-points.scale[0].y);
     pxPerMeter = d / m;
     pg.classList.add('visible');
     pg.style.backgroundSize = pxPerMeter+'px '+pxPerMeter+'px';
-    pinfo.textContent = 'Масштаб сохранён: 1 м = '+Math.round(pxPerMeter)+' px.\nТеперь переключитесь на шаг «2️⃣ Ширина комнаты» и отметьте 2 угла.';
+    pinfo.textContent = 'Масштаб сохранён: 1 м = '+Math.round(pxPerMeter)+' px. Переходите к шагу 2 — ширина.';
+    setMode('width');
 });
 
-// Перенести в план
-pToPlan.addEventListener('click', function(){
-    if (widthPoints.length < 2){ alert('Отметьте 2 угла комнаты.'); return; }
-    const d = Math.hypot(widthPoints[1].x-widthPoints[0].x, widthPoints[1].y-widthPoints[0].y);
-    let widthMeters = d / pxPerMeter;
-    let lengthMeters = parseFloat(pLen.value);
-
-    if (isNaN(lengthMeters)||lengthMeters<1) lengthMeters=4;
-    if (widthMeters < 2) widthMeters = 2;
-    if (widthMeters > 15) widthMeters = 15;
-    if (lengthMeters > 15) lengthMeters = 15;
-
-    // Округляем до 0.1 м
-    widthMeters = Math.round(widthMeters*10)/10;
-    lengthMeters = Math.round(lengthMeters*10)/10;
-
-    // Переносим в поля комнаты
-    document.getElementById('room-w').value = widthMeters;
-    document.getElementById('room-h').value = lengthMeters;
-
-    // Применяем
+document.getElementById('photo-to-plan').addEventListener('click', function(){
+    if (widthMeters <= 0 || lengthMeters <= 0) {
+        alert('Сначала задайте ширину и длину комнаты (шаги 2 и 3).');
+        return;
+    }
+    let w = Math.round(widthMeters*10)/10;
+    let h = Math.round(lengthMeters*10)/10;
+    if (w < 2) w = 2;
+    if (h < 2) h = 2;
+    if (w > 15) w = 15;
+    if (h > 15) h = 15;
+    document.getElementById('room-w').value = w;
+    document.getElementById('room-h').value = h;
     applyRoom();
-
-    // Уведомление
-    alert('✅ Размеры перенесены в план!\n\nШирина: ' + widthMeters + ' м\nДлина: ' + lengthMeters + ' м\n\nТочность зависит от качества фото.');
-
+    alert('✅ Размеры перенесены в план!\n\nШирина: ' + w + ' м\nДлина: ' + h + ' м\n\nПогрешность ±15% из-за перспективы фото.');
     pm.classList.add('hidden');
+});
+
+function resetPhoto(){
+    points.scale.length = 0;
+    points.width.length = 0;
+    points.length.length = 0;
+    Object.values(pointEls).forEach(function(arr){
+        arr.forEach(function(el){ el.classList.remove('visible'); });
+    });
+    pg.classList.remove('visible');
+    pdl.classList.add('hidden');
+    pa.classList.add('hidden');
+    pinfo.textContent = '';
+    pxPerMeter = 0;
+    widthMeters = 0;
+    lengthMeters = 0;
+    setMode('scale');
+}
+
+document.getElementById('photo-reset').addEventListener('click', function(){
+    resetPhoto();
+    if (pimg.src) {
+        phint.textContent = '1️⃣ Кликните 2 точки на известном предмете и введите его длину';
+    }
 });
 
 // PNG
@@ -413,6 +456,7 @@ document.getElementById('clear-btn').addEventListener('click', function(){
     if (!confirm('Удалить всё?')) return;
     room.querySelectorAll('.furniture, .opening').forEach(function(el){el.remove();});
     openings=[]; save();
+    updateStats();
 });
 
 // Сохранение
@@ -448,7 +492,11 @@ function load(){
         return true;
     }catch(e){ return false; }
 }
+
 if (!load()) updateRoom();
+updateStats();
+
+
 
 
 
