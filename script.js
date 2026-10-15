@@ -4,7 +4,20 @@ const room = document.getElementById('room');
 let roomW = 6, roomH = 5;
 let openings = [], currentTool = null;
 let colorIdx = 0;
-const COLORS = ['#f97316','#14b8a6','#ef4444','#8b5cf6','#3b82f6','#22c55e','#92400e','#64748b'];
+
+// ============================================================
+//   МОНОХРОМНАЯ ПАЛИТРА (в стиле сайта)
+// ============================================================
+const COLORS = [
+    '#404040',  // тёмно-серый
+    '#525252',  // серый
+    '#666666',  // средне-серый
+    '#1f2937',  // почти чёрный
+    '#374151',  // графит
+    '#4b5563',  // каменно-серый
+    '#334155',  // сине-серый
+    '#475569'   // холодный серый
+];
 
 // Счётчик
 (function(){
@@ -486,7 +499,15 @@ function load(){
         document.getElementById('room-h').value=roomH;
         updateRoom();
         (s.items||[]).forEach(function(it){
-            const el = createEl(it.name,it.w,it.h,it.color,it.shape,parseFloat(it.left),parseFloat(it.top));
+            // Конвертируем старые цвета в новую монохромную палитру
+            let color = it.color;
+            if (color && !color.startsWith('#')) color = '#525252';
+            // Если сохранён старый яркий цвет — заменяем на серый
+            const bright = ['#f97316','#14b8a6','#ef4444','#8b5cf6','#3b82f6','#22c55e','#92400e','#64748b'];
+            if (bright.indexOf(color) > -1) {
+                color = COLORS[colorIdx++ % COLORS.length];
+            }
+            const el = createEl(it.name,it.w,it.h,color,it.shape,parseFloat(it.left),parseFloat(it.top));
             room.appendChild(el);
         });
         return true;
@@ -495,8 +516,6 @@ function load(){
 
 if (!load()) updateRoom();
 updateStats();
-
-
 
 
 
