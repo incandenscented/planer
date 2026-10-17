@@ -68,6 +68,8 @@ document.querySelectorAll('.tool-btn[data-mode]').forEach(function(b){
 room.addEventListener('click', function(e){
     if (!currentTool) return;
     if (e.target.classList.contains('furniture') || e.target.closest('.furniture')) return;
+    if (e.target.classList.contains('opening') || e.target.closest('.opening')) return;
+    
     const r = room.getBoundingClientRect();
     const x = e.clientX - r.left, y = e.clientY - r.top;
     const near = 15;
@@ -116,13 +118,81 @@ function renderOpenings(){
             el.style.top = (op.position * SCALE - px/2) + 'px';
             el.style.left = (op.side === 'left' ? '-5px' : (room.clientWidth - 3) + 'px');
         }
-        el.style.pointerEvents = 'auto'; el.style.cursor = 'pointer';
-        el.title = 'Двойной клик — удалить';
+        el.style.pointerEvents = 'auto'; 
+        el.style.cursor = 'grab';
+        el.title = 'Тяните, чтобы переместить. Двойной клик — удалить';
         
+        // --- ПЕРЕТАСКИВАНИЕ ПРОЁМА ---
+        let isDraggingOpening = false;
+
+        function startDragOpening(e) {
+            if (e.button && e.button !== 0) return; 
+            e.stopPropagation(); 
+            e.preventDefault();
+            
+            isDraggingOpening = true;
+            el.style.cursor = 'grabbing';
+
+            function onMove(ev) {
+                if (!isDraggingOpening) return;
+                ev.preventDefault();
+                
+                const rect = room.getBoundingClientRect();
+                let clientX, clientY;
+                
+                if (ev.touches && ev.touches.length > 0) {
+                    clientX = ev.touches[0].clientX;
+                    clientY = ev.touches[0].clientY;
+                } else {
+                    clientX = ev.clientX;
+                    clientY = ev.clientY;
+                }
+
+                let newPos = 0;
+                if (op.side === 'top' || op.side === 'bottom') {
+                    newPos = (clientX - rect.left) / SCALE;
+                } else {
+                    newPos = (clientY - rect.top) / SCALE;
+                }
+
+                const minPos = (op.width / 2);
+                const maxPos = (op.side === 'top' || op.side === 'bottom' ? roomW : roomH) - (op.width / 2);
+                
+                if (newPos < minPos) newPos = minPos;
+                if (newPos > maxPos) newPos = maxPos;
+
+                newPos = Math.round(newPos * 10) / 10;
+                
+                op.position = newPos;
+                renderOpenings(); 
+            }
+
+            function endDrag(ev) {
+                if (!isDraggingOpening) return;
+                isDraggingOpening = false;
+                el.style.cursor = 'grab';
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', endDrag);
+                document.removeEventListener('touchmove', onMove);
+                document.removeEventListener('touchend', endDrag);
+                save(); 
+            }
+
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', endDrag);
+            document.addEventListener('touchmove', onMove, { passive: false });
+            document.addEventListener('touchend', endDrag);
+        }
+
+        el.addEventListener('mousedown', startDragOpening);
+        el.addEventListener('touchstart', startDragOpening, { passive: false });
+
+        // Двойной клик для удаления
         el.addEventListener('dblclick', function(ev){
             ev.stopPropagation();
             if (confirm('Удалить?')) { openings.splice(i, 1); renderOpenings(); save(); }
         });
+        
         room.appendChild(el);
 
         // 2. Дуга открывания
@@ -550,5 +620,7 @@ function load(){
 
 if (!load()) updateRoom();
 updateStats();
+
+
 
 
