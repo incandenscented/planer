@@ -5,18 +5,10 @@ let roomW = 6, roomH = 5;
 let openings = [], currentTool = null;
 let colorIdx = 0;
 
-// ============================================================
-//   МОНОХРОМНАЯ ПАЛИТРА (в стиле сайта)
-// ============================================================
+// Монохромная палитра
 const COLORS = [
-    '#404040',  // тёмно-серый
-    '#525252',  // серый
-    '#666666',  // средне-серый
-    '#1f2937',  // почти чёрный
-    '#374151',  // графит
-    '#4b5563',  // каменно-серый
-    '#334155',  // сине-серый
-    '#475569'   // холодный серый
+    '#404040', '#525252', '#666666', '#1f2937', 
+    '#374151', '#4b5563', '#334155', '#475569'
 ];
 
 // Счётчик
@@ -80,39 +72,95 @@ room.addEventListener('click', function(e){
     const x = e.clientX - r.left, y = e.clientY - r.top;
     const near = 15;
     let side=null, pos=0;
-    if (Math.abs(y)<near) { side='top'; pos=x/SCALE; }
-    else if (Math.abs(y-r.height)<near) { side='bottom'; pos=x/SCALE; }
-    else if (Math.abs(x)<near) { side='left'; pos=y/SCALE; }
-    else if (Math.abs(x-r.width)<near) { side='right'; pos=y/SCALE; }
-    if (!side){ alert('Кликните ближе к стене.'); return; }
+    
+    if (Math.abs(y) < near) { side = 'top'; pos = x / SCALE; }
+    else if (Math.abs(y - r.height) < near) { side = 'bottom'; pos = x / SCALE; }
+    else if (Math.abs(x) < near) { side = 'left'; pos = y / SCALE; }
+    else if (Math.abs(x - r.width) < near) { side = 'right'; pos = y / SCALE; }
+    
+    if (!side) { alert('Кликните ближе к стене.'); return; }
+    
     let w = parseFloat(document.getElementById('opening-width').value);
-    if (isNaN(w)||w<0.6) w=0.6; if (w>2.5) w=2.5;
-    openings.push({type:currentTool, side:side, position:pos, width:w});
-    renderOpenings(); save();
+    if (isNaN(w) || w < 0.6) w = 0.6; 
+    if (w > 2.5) w = 2.5;
+    
+    const openSide = document.getElementById('opening-side').value;
+    
+    openings.push({
+        type: currentTool, 
+        side: side, 
+        position: pos, 
+        width: w,
+        openSide: openSide
+    });
+    
+    renderOpenings(); 
+    save();
 });
 
 function renderOpenings(){
-    room.querySelectorAll('.opening').forEach(function(el){ el.remove(); });
+    room.querySelectorAll('.opening, .opening-arc').forEach(function(el){ el.remove(); });
+    
     openings.forEach(function(op, i){
+        // 1. Дверь/окно
         const el = document.createElement('div');
-        el.className = 'opening '+op.type;
-        const px = op.width*SCALE;
-        if (op.side==='top'||op.side==='bottom'){
-            el.style.width=px+'px'; el.style.height='8px';
-            el.style.left=(op.position*SCALE-px/2)+'px';
-            el.style.top=(op.side==='top'?'-5px':(room.clientHeight-3)+'px');
+        el.className = 'opening ' + op.type;
+        const px = op.width * SCALE;
+        
+        if (op.side === 'top' || op.side === 'bottom') {
+            el.style.width = px + 'px'; el.style.height = '8px';
+            el.style.left = (op.position * SCALE - px/2) + 'px';
+            el.style.top = (op.side === 'top' ? '-5px' : (room.clientHeight - 3) + 'px');
         } else {
-            el.style.width='8px'; el.style.height=px+'px';
-            el.style.top=(op.position*SCALE-px/2)+'px';
-            el.style.left=(op.side==='left'?'-5px':(room.clientWidth-3)+'px');
+            el.style.width = '8px'; el.style.height = px + 'px';
+            el.style.top = (op.position * SCALE - px/2) + 'px';
+            el.style.left = (op.side === 'left' ? '-5px' : (room.clientWidth - 3) + 'px');
         }
-        el.style.pointerEvents='auto'; el.style.cursor='pointer';
-        el.title='Двойной клик — удалить';
+        el.style.pointerEvents = 'auto'; el.style.cursor = 'pointer';
+        el.title = 'Двойной клик — удалить';
+        
         el.addEventListener('dblclick', function(ev){
             ev.stopPropagation();
-            if (confirm('Удалить?')){ openings.splice(i,1); renderOpenings(); save(); }
+            if (confirm('Удалить?')) { openings.splice(i, 1); renderOpenings(); save(); }
         });
         room.appendChild(el);
+
+        // 2. Дуга открывания
+        const arc = document.createElement('div');
+        arc.className = 'opening-arc ' + op.type + '-arc';
+        
+        const dirIn = op.openSide.includes('in') ? 1 : -1; 
+        const dirLeft = op.openSide.includes('left') ? 1 : -1;
+        
+        if (op.side === 'top' || op.side === 'bottom') {
+            arc.style.width = px + 'px';
+            arc.style.height = px + 'px';
+            arc.style.left = (op.position * SCALE - px/2) + 'px';
+            
+            if (op.side === 'top') {
+                arc.style.top = dirIn === 1 ? '0px' : '-100%'; 
+                arc.style.borderRadius = dirLeft === 1 ? '0 0 0 100%' : '0 0 100% 0';
+            } else {
+                arc.style.top = dirIn === 1 ? '100%' : '0px';
+                arc.style.transform = 'translateY(-100%)';
+                arc.style.borderRadius = dirLeft === 1 ? '100% 0 0 0' : '0 100% 0 0';
+            }
+        } else {
+            arc.style.width = px + 'px';
+            arc.style.height = px + 'px';
+            arc.style.top = (op.position * SCALE - px/2) + 'px';
+            
+            if (op.side === 'left') {
+                arc.style.left = dirIn === 1 ? '0px' : '-100%';
+                arc.style.borderRadius = dirLeft === 1 ? '0 100% 0 0' : '0 0 100% 0';
+            } else {
+                arc.style.left = dirIn === 1 ? '100%' : '0px';
+                arc.style.transform = 'translateX(-100%)';
+                arc.style.borderRadius = dirLeft === 1 ? '100% 0 0 0' : '0 0 0 100%';
+            }
+        }
+        arc.style.pointerEvents = 'none';
+        room.appendChild(arc);
     });
 }
 
@@ -256,9 +304,7 @@ function drag(el){
     el.addEventListener('touchstart',start,{passive:false});
 }
 
-// ============================================================
-//   ПОДСЧЁТ ПЛОЩАДИ
-// ============================================================
+// ПОДСЧЁТ ПЛОЩАДИ
 function updateStats(){
     const statsEl = document.getElementById('room-stats');
     if (!statsEl) return;
@@ -278,15 +324,11 @@ function updateStats(){
 
     statsEl.innerHTML =
         '<span class="stat-item">📐 Комната: <strong>' + roomArea.toFixed(1) + ' м²</strong></span>' +
-        '<span class="stat-sep">|</span>' +
         '<span class="stat-item">🛋 Занято: <strong>' + furnitureArea.toFixed(1) + ' м²</strong> (' + occupiedPercent + '%)</span>' +
-        '<span class="stat-sep">|</span>' +
         '<span class="stat-item">⬜ Свободно: <strong>' + freeArea.toFixed(1) + ' м²</strong> (' + freePercent + '%)</span>';
 }
 
-// ============================================================
-//   ЗАМЕР ПО ФОТО
-// ============================================================
+// ЗАМЕР ПО ФОТО
 const pm = document.getElementById('photo-modal');
 const pi = document.getElementById('photo-input');
 const pimg = document.getElementById('photo-img');
@@ -422,7 +464,7 @@ document.getElementById('photo-to-plan').addEventListener('click', function(){
     document.getElementById('room-w').value = w;
     document.getElementById('room-h').value = h;
     applyRoom();
-    alert('✅ Размеры перенесены в план!\n\nШирина: ' + w + ' м\nДлина: ' + h + ' м\n\nПогрешность ±15% из-за перспективы фото.');
+    alert('✅ Размеры перенесены в план!\n\nШирина: ' + w + ' м\nДлина: ' + h + ' м');
     pm.classList.add('hidden');
 });
 
@@ -467,7 +509,7 @@ document.getElementById('save-png').addEventListener('click', function(){
 // Очистка
 document.getElementById('clear-btn').addEventListener('click', function(){
     if (!confirm('Удалить всё?')) return;
-    room.querySelectorAll('.furniture, .opening').forEach(function(el){el.remove();});
+    room.querySelectorAll('.furniture, .opening, .opening-arc').forEach(function(el){el.remove();});
     openings=[]; save();
     updateStats();
 });
@@ -499,15 +541,7 @@ function load(){
         document.getElementById('room-h').value=roomH;
         updateRoom();
         (s.items||[]).forEach(function(it){
-            // Конвертируем старые цвета в новую монохромную палитру
-            let color = it.color;
-            if (color && !color.startsWith('#')) color = '#525252';
-            // Если сохранён старый яркий цвет — заменяем на серый
-            const bright = ['#f97316','#14b8a6','#ef4444','#8b5cf6','#3b82f6','#22c55e','#92400e','#64748b'];
-            if (bright.indexOf(color) > -1) {
-                color = COLORS[colorIdx++ % COLORS.length];
-            }
-            const el = createEl(it.name,it.w,it.h,color,it.shape,parseFloat(it.left),parseFloat(it.top));
+            const el = createEl(it.name,it.w,it.h,it.color,it.shape,parseFloat(it.left),parseFloat(it.top));
             room.appendChild(el);
         });
         return true;
@@ -516,6 +550,5 @@ function load(){
 
 if (!load()) updateRoom();
 updateStats();
-
 
 
