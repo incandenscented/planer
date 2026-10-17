@@ -199,8 +199,10 @@ function renderOpenings(){
         const arc = document.createElement('div');
         arc.className = 'opening-arc ' + op.type + '-arc';
         
-        const dirIn = op.openSide.includes('in') ? 1 : -1; 
-        const dirLeft = op.openSide.includes('left') ? 1 : -1;
+        // Защита от старых сохранений (если openSide не задан)
+        const safeSide = op.openSide || 'in-left';
+        const dirIn = safeSide.includes('in') ? 1 : -1; 
+        const dirLeft = safeSide.includes('left') ? 1 : -1;
         
         if (op.side === 'top' || op.side === 'bottom') {
             arc.style.width = px + 'px';
