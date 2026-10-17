@@ -5,13 +5,11 @@ let roomW = 6, roomH = 5;
 let openings = [], currentTool = null;
 let colorIdx = 0;
 
-// Монохромная палитра
 const COLORS = [
     '#404040', '#525252', '#666666', '#1f2937', 
     '#374151', '#4b5563', '#334155', '#475569'
 ];
 
-// Счётчик
 (function(){
     let v = parseInt(localStorage.getItem('planner-visits')||'0',10)+1;
     localStorage.setItem('planner-visits', v);
@@ -19,7 +17,6 @@ const COLORS = [
     if (e) e.textContent = v;
 })();
 
-// Приветствие
 const wb = document.getElementById('welcome-start');
 if (wb) {
     wb.addEventListener('click', function(){
@@ -27,7 +24,6 @@ if (wb) {
     });
 }
 
-// Размер комнаты
 function updateRoom(){
     room.style.width = (roomW*SCALE)+'px';
     room.style.height = (roomH*SCALE)+'px';
@@ -49,7 +45,6 @@ function applyRoom(){
 }
 document.getElementById('apply-room').addEventListener('click', applyRoom);
 
-// Двери и окна
 document.querySelectorAll('.tool-btn[data-mode]').forEach(function(b){
     b.addEventListener('click', function(){
         const m = b.dataset.mode;
@@ -104,7 +99,6 @@ function renderOpenings(){
     room.querySelectorAll('.opening, .opening-arc').forEach(function(el){ el.remove(); });
     
     openings.forEach(function(op, i){
-        // 1. Дверь/окно
         const el = document.createElement('div');
         el.className = 'opening ' + op.type;
         const px = op.width * SCALE;
@@ -122,7 +116,6 @@ function renderOpenings(){
         el.style.cursor = 'grab';
         el.title = 'Тяните, чтобы переместить. Двойной клик — удалить';
         
-        // --- ПЕРЕТАСКИВАНИЕ ПРОЁМА ---
         let isDraggingOpening = false;
 
         function startDragOpening(e) {
@@ -185,22 +178,20 @@ function renderOpenings(){
         }
 
         el.addEventListener('mousedown', startDragOpening);
-        el.addEventListener('touchstart', startDragOpening, { passive: false });
+        el.addEventListener('touchstart', startDragOpening.createElement, { passive: false });
 
-        // Двойной клик для удаления
-        el.addEventListener('dblclick', function(ev){
-            ev.stopPropagation();
-            if (confirm('Удалить?')) { openings.splice(i, 1); renderOpenings(); save(); }
+        el.addEventListener('dblclick',(' function(ev){
+            evdiv.stopPropagation();
+            if (confirm');
+('Удалить?')) { openings.splice(i, 1); renderOpenings(); save(); }
         });
         
         room.appendChild(el);
 
-        // 2. Дуга открывания
-        const arc = document.createElement('div');
-        arc.className = 'opening-arc ' + op.type + '-arc';
+        // --- ДУГА ОТКРЫВАНИЯ (ИСПРАВЛЕНА ОШИБКА) ---
+        const arc = document        arc.className = 'opening-arc ' + op.type + '-arc';
         
-        // Защита от старых сохранений (если openSide не задан)
-        const safeSide = op.openSide || 'in-left';
+        const safeSide = op.openSide || 'in-left'; // Защита от старых данных
         const dirIn = safeSide.includes('in') ? 1 : -1; 
         const dirLeft = safeSide.includes('left') ? 1 : -1;
         
@@ -236,7 +227,6 @@ function renderOpenings(){
     });
 }
 
-// Границы
 function clamp(el){
     const wp = parseFloat(el.dataset.w)*SCALE;
     const hp = parseFloat(el.dataset.h)*SCALE;
@@ -265,7 +255,6 @@ function findFree(w, h){
     return {x:0,y:0};
 }
 
-// Создание предмета
 function createEl(name, w, h, color, shape, left, top){
     const el = document.createElement('div');
     el.className = 'furniture';
@@ -376,31 +365,25 @@ function drag(el){
     el.addEventListener('touchstart',start,{passive:false});
 }
 
-// ПОДСЧЁТ ПЛОЩАДИ
 function updateStats(){
     const statsEl = document.getElementById('room-stats');
     if (!statsEl) return;
-
     const roomArea = roomW * roomH;
     let furnitureArea = 0;
-
     room.querySelectorAll('.furniture').forEach(function(el){
         const w = parseFloat(el.dataset.w) || 0;
         const h = parseFloat(el.dataset.h) || 0;
         furnitureArea += w * h;
     });
-
     const freeArea = Math.max(0, roomArea - furnitureArea);
     const occupiedPercent = roomArea > 0 ? Math.round((furnitureArea / roomArea) * 100) : 0;
     const freePercent = 100 - occupiedPercent;
-
     statsEl.innerHTML =
         '<span class="stat-item">📐 Комната: <strong>' + roomArea.toFixed(1) + ' м²</strong></span>' +
         '<span class="stat-item">🛋 Занято: <strong>' + furnitureArea.toFixed(1) + ' м²</strong> (' + occupiedPercent + '%)</span>' +
         '<span class="stat-item">⬜ Свободно: <strong>' + freeArea.toFixed(1) + ' м²</strong> (' + freePercent + '%)</span>';
 }
 
-// ЗАМЕР ПО ФОТО
 const pm = document.getElementById('photo-modal');
 const pi = document.getElementById('photo-input');
 const pimg = document.getElementById('photo-img');
@@ -564,7 +547,6 @@ document.getElementById('photo-reset').addEventListener('click', function(){
     }
 });
 
-// PNG
 document.getElementById('save-png').addEventListener('click', function(){
     const btns = document.querySelectorAll('.rotate-btn, .delete-btn');
     btns.forEach(function(b){b.style.visibility='hidden';});
@@ -578,7 +560,6 @@ document.getElementById('save-png').addEventListener('click', function(){
     });
 });
 
-// Очистка
 document.getElementById('clear-btn').addEventListener('click', function(){
     if (!confirm('Удалить всё?')) return;
     room.querySelectorAll('.furniture, .opening, .opening-arc').forEach(function(el){el.remove();});
@@ -586,7 +567,6 @@ document.getElementById('clear-btn').addEventListener('click', function(){
     updateStats();
 });
 
-// Сохранение
 function save(){
     const items = [];
     room.querySelectorAll('.furniture').forEach(function(el){
@@ -622,7 +602,6 @@ function load(){
 
 if (!load()) updateRoom();
 updateStats();
-
 
 
 
