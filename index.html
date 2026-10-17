@@ -8,6 +8,7 @@
 </head>
 <body>
 
+    <!-- ПРИВЕТСТВЕННОЕ ОКНО -->
     <div id="welcome-modal" class="modal">
         <div class="welcome-content">
             <h1>Планировщик квартиры</h1>
@@ -22,7 +23,7 @@
                 <div class="feature">
                     <div class="feature-icon">🚪</div>
                     <h4>Проёмы</h4>
-                    <p>Двери и окна на стенах</p>
+                    <p>Двери и окна с зоной открывания</p>
                 </div>
                 <div class="feature">
                     <div class="feature-icon">📷</div>
@@ -55,6 +56,7 @@
         </div>
     </div>
 
+    <!-- ШАПКА -->
     <header class="topbar">
         <div class="brand">
             <span class="brand-icon">🏛</span>
@@ -67,8 +69,10 @@
         </div>
     </header>
 
+    <!-- ОСНОВНОЙ ЭКРАН -->
     <div class="app">
 
+        <!-- ЛЕВАЯ ПАНЕЛЬ -->
         <aside class="toolbox">
 
             <section class="panel">
@@ -86,6 +90,14 @@
                     <button class="tool-btn window" data-mode="window">🪟 Окно</button>
                 </div>
                 <label>Ширина (м): <input id="opening-width" type="number" value="0.9" min="0.6" max="2.5" step="0.1"></label>
+                <label>Открывание:
+                    <select id="opening-side">
+                        <option value="in-left">Внутрь (влево)</option>
+                        <option value="in-right">Внутрь (вправо)</option>
+                        <option value="out-left">Наружу (влево)</option>
+                        <option value="out-right">Наружу (вправо)</option>
+                    </select>
+                </label>
             </section>
 
             <section class="panel">
@@ -116,11 +128,14 @@
                 <button id="clear-btn" class="btn-danger">🗑 Очистить всё</button>
             </section>
 
+            <!-- ПЛАШКА ПЛОЩАДИ (ВНИЗУ ПАНЕЛИ) -->
+            <div id="room-stats" class="room-stats-bottom"></div>
+
         </aside>
 
+        <!-- ОБЛАСТЬ ПРОСМОТРА -->
         <main class="viewport">
             <div id="room" class="room"></div>
-            <div id="room-stats" class="room-stats"></div>
         </main>
 
     </div>
@@ -174,7 +189,6 @@
     <script src="script.js"></script>
 </body>
 </html>
-
 
 
 
